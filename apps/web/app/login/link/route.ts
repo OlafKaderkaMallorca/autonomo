@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SITZUNGS_COOKIE } from "@/lib/api";
 
-const API_URL = process.env.API_URL ?? "http://localhost:4000";
+const API_URL = process.env.API_URL ?? "http://localhost:4002";
 
 /** Anmeldelink aus der E-Mail einlösen, Sitzungs-Cookie setzen und weiterleiten. */
 export async function GET(req: NextRequest) {

@@ -1,36 +1,39 @@
 {
   "expo": {
-    "name": "Aut\u00f3nomo",
-    "slug": "autonomo",
+    "name": "ApuntaPro",
+    "slug": "apuntapro",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "es.autonomo.app"
+      "bundleIdentifier": "es.apuntapro.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#1F2937",
+        "foregroundImage": "./assets/icon.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "es.autonomo.app"
+      "package": "es.apuntapro.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "autonomo",
+    "scheme": "apuntapro",
     "plugins": [
       "expo-router",
       "expo-secure-store",
       "expo-localization"
     ],
     "extra": {
-      "apiUrl": "http://localhost:4000"
+      "apiUrl": "http://localhost:4002"
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1F2937"
     }
   }
 }

@@ -1,5 +1,5 @@
 export const de = {
-  "app.name": "Autónomo",
+  "app.name": "ApuntaPro",
   "login.titel": "Anmelden",
   "login.email": "E-Mail",
   "login.passwort": "Passwort",
@@ -16,6 +16,6 @@ export const de = {
   "kunden.titel": "Kunden",
   "kunden.leer": "Noch keine Kunden angelegt.",
   "sprache": "Sprache",
-  "mail.magicLink.betreff": "Dein Anmeldelink für Autónomo",
+  "mail.magicLink.betreff": "Dein Anmeldelink für ApuntaPro",
   "mail.magicLink.text": "Hallo,\n\nmit diesem Link meldest du dich an (gültig für {minuten} Minuten):\n{link}\n\nFalls du das nicht angefordert hast, ignoriere diese E-Mail.",
 } as const;

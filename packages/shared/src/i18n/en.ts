@@ -1,7 +1,7 @@
 import type { Uebersetzungen } from "./index.js";
 
 export const en: Uebersetzungen = {
-  "app.name": "Autónomo",
+  "app.name": "ApuntaPro",
   "login.titel": "Sign in",
   "login.email": "Email",
   "login.passwort": "Password",
@@ -18,6 +18,6 @@ export const en: Uebersetzungen = {
   "kunden.titel": "Clients",
   "kunden.leer": "No clients yet.",
   "sprache": "Language",
-  "mail.magicLink.betreff": "Your Autónomo sign-in link",
+  "mail.magicLink.betreff": "Your ApuntaPro sign-in link",
   "mail.magicLink.text": "Hello,\n\nUse this link to sign in (valid for {minuten} minutes):\n{link}\n\nIf you did not request this, please ignore this email.",
 };

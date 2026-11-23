@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 
 export const SITZUNGS_COOKIE = "sitzung";
-const API_URL = process.env.API_URL ?? "http://localhost:4000";
+const API_URL = process.env.API_URL ?? "http://localhost:4002";
 
 export class ApiFehler extends Error {
   constructor(public status: number, message: string) {

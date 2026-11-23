@@ -11,8 +11,8 @@ import { migriere } from "../src/migrate.js";
  * Erwartet eine Postgres-Instanz mit den Rollen autonomo_owner (createdb) und autonomo_app.
  * TEST_OWNER_URL zeigt auf eine beliebige DB des Owners, TEST_APP_URL_BASIS ohne Datenbanknamen.
  */
-const OWNER_URL = process.env.TEST_OWNER_URL ?? "postgres://autonomo_owner:owner@localhost:5432/postgres";
-const APP_URL_BASIS = process.env.TEST_APP_URL_BASIS ?? "postgres://autonomo_app:app@localhost:5432";
+const OWNER_URL = process.env.TEST_OWNER_URL ?? "postgres://autonomo_owner:owner@localhost:5434/postgres";
+const APP_URL_BASIS = process.env.TEST_APP_URL_BASIS ?? "postgres://autonomo_app:app@localhost:5434";
 
 export interface TestUmgebung {
   app: FastifyInstance;

@@ -8,6 +8,10 @@ export default async function LoginSeite({ searchParams }: { searchParams: Promi
   const { fehler } = await searchParams;
   return (
     <main>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/schriftzug-hell.svg" alt="ApuntaPro" className="marke marke-hell" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/schriftzug-dunkel.svg" alt="" aria-hidden className="marke marke-dunkel" />
       <div className="kopf">
         <h1>{t("login.titel")}</h1>
         <SprachWahl sprache={sprache} />

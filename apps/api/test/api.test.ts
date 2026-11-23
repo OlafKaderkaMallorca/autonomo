@@ -56,7 +56,7 @@ describe("Anmeldung", () => {
   it("Anmeldelink funktioniert nur einmal", async () => {
     await u.app.inject({ method: "POST", url: "/auth/magic-link", payload: { email: "olaf@test.es" } });
     const mail = u.mails.at(-1)!;
-    expect(mail.betreff).toBe("Dein Anmeldelink für Autónomo");
+    expect(mail.betreff).toBe("Dein Anmeldelink für ApuntaPro");
     const token = decodeURIComponent(/token=([^\s]+)/.exec(mail.text)![1]!);
     const erst = await u.app.inject({ method: "POST", url: "/auth/magic-link/einloesen", payload: { token } });
     expect(erst.statusCode).toBe(200);
@@ -182,7 +182,7 @@ describe("Rollen im Betrieb", () => {
       payload: { email: "asesoria@test.es", name: "Asesoría", rolle: "steuerberater", sprache: "es" },
     });
     expect(e2.statusCode, e2.body).toBe(201);
-    expect(u.mails.at(-1)!.betreff).toBe("Tu enlace de acceso a Autónomo");
+    expect(u.mails.at(-1)!.betreff).toBe("Tu enlace de acceso a ApuntaPro");
     beraterToken = await anmeldenPerLink(u, "asesoria@test.es");
   });
 

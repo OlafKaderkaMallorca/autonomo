@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 
 /** API-Adresse: EXPO_PUBLIC_API_URL beim Build, sonst app.json → extra.apiUrl. */
 export const API_URL: string =
-  process.env.EXPO_PUBLIC_API_URL ?? (Constants.expoConfig?.extra?.apiUrl as string | undefined) ?? "http://localhost:4000";
+  process.env.EXPO_PUBLIC_API_URL ?? (Constants.expoConfig?.extra?.apiUrl as string | undefined) ?? "http://localhost:4002";
 
 const TOKEN_SCHLUESSEL = "sitzung";
 

@@ -1,7 +1,7 @@
 import type { Uebersetzungen } from "./index.js";
 
 export const es: Uebersetzungen = {
-  "app.name": "Autónomo",
+  "app.name": "ApuntaPro",
   "login.titel": "Iniciar sesión",
   "login.email": "Correo electrónico",
   "login.passwort": "Contraseña",
@@ -18,6 +18,6 @@ export const es: Uebersetzungen = {
   "kunden.titel": "Clientes",
   "kunden.leer": "Todavía no hay clientes.",
   "sprache": "Idioma",
-  "mail.magicLink.betreff": "Tu enlace de acceso a Autónomo",
+  "mail.magicLink.betreff": "Tu enlace de acceso a ApuntaPro",
   "mail.magicLink.text": "Hola:\n\nCon este enlace inicias sesión (válido durante {minuten} minutos):\n{link}\n\nSi no lo has solicitado, ignora este correo.",
 };

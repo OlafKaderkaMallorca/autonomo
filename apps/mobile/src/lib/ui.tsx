@@ -5,8 +5,8 @@ import { useSitzung } from "./sitzung";
 export function useFarben() {
   const dunkel = useColorScheme() === "dark";
   return dunkel
-    ? { bg: "#141816", fg: "#e8ece9", muted: "#a3aea7", karte: "#1c211e", rand: "#2d3530", akzent: "#4fb489", akzentFg: "#0d130f", fehler: "#f97066" }
-    : { bg: "#f6f7f5", fg: "#1d2420", muted: "#5b665f", karte: "#ffffff", rand: "#dde3de", akzent: "#1f6f50", akzentFg: "#ffffff", fehler: "#b42318" };
+    ? { bg: "#111827", fg: "#f3f4f6", muted: "#9ca3af", karte: "#1f2937", rand: "#374151", akzent: "#34d399", akzentFg: "#111827", fehler: "#f97066" }
+    : { bg: "#f5f7f6", fg: "#1f2937", muted: "#5b6472", karte: "#ffffff", rand: "#e1e5ea", akzent: "#059669", akzentFg: "#ffffff", fehler: "#b42318" };
 }
 
 export function Knopf({ titel, leise, ...rest }: PressableProps & { titel: string; leise?: boolean }) {

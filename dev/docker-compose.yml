@@ -1,0 +1,18 @@
+# Nur die Datenbank für die lokale Entwicklung (Port 5434, damit es nicht mit anderen Projekten kollidiert).
+# Start: pnpm db:start   ·   Stopp: pnpm db:stop
+name: autonomo-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: autonomo_owner
+      POSTGRES_PASSWORD: owner
+      POSTGRES_DB: autonomo
+    ports: ["5434:5432"]
+    volumes:
+      - daten:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  daten:

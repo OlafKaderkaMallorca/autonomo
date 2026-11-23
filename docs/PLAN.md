@@ -1,4 +1,6 @@
-# Autónomo-App – Projektplan
+# ApuntaPro – Projektplan
+
+_App-Name seit 23.11.2026: **ApuntaPro** (vorher Arbeitstitel „Autónomo-App“)._
 
 Stand: 23.11.2026 (ergänzt: mehrere Handwerker) · Status: **Freigegeben durch Olaf am 23.11.2026** (drei Abo-Stufen, VeriFactu zahlt jeder Betrieb selbst)
 
@@ -180,7 +182,7 @@ Da nur Olaf die App benutzt, muss sie nicht öffentlich im App Store stehen. Auf
 
 ### Phase 0 – Grundgerüst (ca. 1 Woche)
 - Monorepo: `apps/mobile` (Expo), `apps/web` (Next.js), `apps/api`, `packages/shared` (Typen, Übersetzungen)
-- Docker-Compose-Setup, Hetzner-Server, Domain, HTTPS, Backups
+- Lokale Entwicklungsumgebung (Web 3002, API 4002, Datenbank 5434). Hetzner-Server, Domain, HTTPS und Backups folgen später, sobald es online gehen soll (Entscheidung Olaf, 23.11.2026).
 - Login und Rollen, Übersetzungen DE/ES/EN
 - **Mehrmandantenfähigkeit**: Betriebe, Mitgliedschaften, Datentrennung per Row-Level-Security
 - Grundgerüst damit ca. 2 Wochen statt 1
