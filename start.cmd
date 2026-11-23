@@ -13,6 +13,7 @@ if not exist node_modules (
   echo Noch nicht eingerichtet. Bitte zuerst einrichten.cmd ausfuehren.
   goto fehler
 )
+call scripts\windows\_ports.cmd || goto fehler
 call scripts\windows\_datenbank.cmd || goto fehler
 
 rem Ausstehende Datenbank-Aenderungen nach einem Update einspielen
