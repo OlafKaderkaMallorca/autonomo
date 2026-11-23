@@ -1,6 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import {
   berechneSummen,
+  emailSchema,
+  formatBetrag,
+  formatDatum,
   bezahltSchema,
   formatMonat,
   korrekturSchema,
@@ -15,14 +18,17 @@ import {
 import { z } from "zod";
 import type { Deps } from "../app.js";
 import { protokolliere } from "../benutzer.js";
+import { heuteMadrid } from "../datum.js";
 import { mitKontext, type Tx } from "../db.js";
 import { HttpFehler, validiere } from "../fehler.js";
 import { zahlen } from "../positionen.js";
 import { naechsteNummer } from "../serien.js";
 import { fehlendeBetriebsdaten } from "./einstellungen.js";
+import { rechnungPdf } from "../pdf/index.js";
+import { sendeOderFehler } from "../versand.js";
 
 const KOPF = `r.id, r.kunde_id, k.name as kunde_name, r.nummer, r.typ, r.status, r.datum, r.leistung_von, r.leistung_bis,
-  r.leistungszeitraum, r.sprache, r.korrigiert_rechnung_id, r.korrektur_grund, r.basis_cent, r.iva_cent, r.irpf_satz,
+  r.leistungszeitraum, r.sprache, r.gesendet_am, r.gesendet_an, r.pdf_datei_id, r.korrigiert_rechnung_id, r.korrektur_grund, r.basis_cent, r.iva_cent, r.irpf_satz,
   r.irpf_cent, r.summe_cent, r.faellig_am, r.bezahlt_am, r.ausgestellt_am, r.bemerkung, r.erstellt_am`;
 const KOPF_ZAHLEN = ["basisCent", "ivaCent", "irpfSatz", "irpfCent", "summeCent"];
 
@@ -82,11 +88,9 @@ export async function ladeRechnung(tx: Tx, rechnungId: string): Promise<Record<s
   return { ...zahlen(r, KOPF_ZAHLEN), positionen, ivaGruppen: summen.ivaGruppen };
 }
 
-function heuteMadrid(): string {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid" }).format(new Date());
-}
 
-export async function rechnungenRoutes(app: FastifyInstance, { sql, auth }: Deps) {
+export async function rechnungenRoutes(app: FastifyInstance, deps: Deps) {
+  const { sql, auth, mail } = deps;
   const nurInhaber = { preHandler: [auth.imBetrieb, auth.nurRolle("inhaber")] };
   const lesen = { preHandler: auth.imBetrieb };
 
@@ -412,5 +416,52 @@ export async function rechnungenRoutes(app: FastifyInstance, { sql, auth }: Deps
       return ladeRechnung(tx, neu!.id);
     });
     return reply.code(201).send(r);
+  });
+
+  /** PDF: Entwürfe als Vorschau mit Wasserzeichen; ausgestellte Rechnungen einmal erzeugt und unverändert gespeichert. */
+  app.get("/betriebe/:betriebId/rechnungen/:rechnungId/pdf", lesen, async (req, reply) => {
+    const { rechnungId } = req.params as { rechnungId: string };
+    const k = req.kontext!;
+    const pdf = await mitKontext(sql, k, async (tx) => {
+      const [r] = await tx`select 1 from rechnung where id = ${rechnungId}`;
+      if (!r) throw new HttpFehler(404, "Rechnung nicht gefunden");
+      // Nur der Inhaber legt das endgültige PDF ab; Kunde/Steuerberatung lesen nur
+      return rechnungPdf(tx, deps, k.betriebId, rechnungId, k.rolle === "inhaber" ? k.benutzerId : undefined);
+    });
+    return reply.type("application/pdf").header("content-disposition", `inline; filename="${pdf.dateiname}"`).send(pdf.inhalt);
+  });
+
+  app.post("/betriebe/:betriebId/rechnungen/:rechnungId/senden", nurInhaber, async (req) => {
+    const { rechnungId } = req.params as { rechnungId: string };
+    const e = validiere(z.object({ an: emailSchema.optional() }), req.body ?? {});
+    const k = req.kontext!;
+    return mitKontext(sql, k, async (tx) => {
+      const [r] = await tx<{ status: string; nummer: string; sprache: Sprache; summeCent: string; faelligAm: string; kundeId: string; kundeSnapshot: { name: string } }[]>`
+        select status, nummer, sprache, summe_cent, faellig_am, kunde_id, kunde_snapshot from rechnung where id = ${rechnungId} for update`;
+      if (!r) throw new HttpFehler(404, "Rechnung nicht gefunden");
+      if (r.status === "entwurf") throw new HttpFehler(409, "Bitte die Rechnung zuerst freigeben", undefined, "nicht_ausgestellt");
+      const [kunde] = await tx<{ email: string | null }[]>`select email from kunde where id = ${r.kundeId}`;
+      const empfaenger = e.an ?? kunde?.email;
+      if (!empfaenger) throw new HttpFehler(400, "Beim Kunden ist keine E-Mail-Adresse hinterlegt", undefined, "keine_email");
+      const [betrieb] = await tx<{ name: string; email: string | null }[]>`select name, email from betrieb where id = ${k.betriebId}`;
+      const pdf = await rechnungPdf(tx, deps, k.betriebId, rechnungId, k.benutzerId);
+      const s = r.sprache;
+      await sendeOderFehler(mail, {
+        an: empfaenger,
+        antwortAn: betrieb!.email,
+        betreff: t(s, "mail.rechnung.betreff", { nummer: r.nummer, betrieb: betrieb!.name }),
+        text: t(s, "mail.rechnung.text", {
+          name: r.kundeSnapshot.name,
+          nummer: r.nummer,
+          betrag: formatBetrag(Number(r.summeCent), s),
+          datum: formatDatum(r.faelligAm, s),
+          betrieb: betrieb!.name,
+        }),
+        anhaenge: [{ dateiname: pdf.dateiname, inhalt: pdf.inhalt, mime: "application/pdf" }],
+      });
+      await tx`update rechnung set gesendet_am = now(), gesendet_an = ${empfaenger} where id = ${rechnungId}`;
+      await protokolliere(tx, { betriebId: k.betriebId, benutzerId: k.benutzerId, aktion: "gesendet", objekt: "rechnung", objektId: rechnungId, daten: { an: empfaenger } });
+      return ladeRechnung(tx, rechnungId);
+    });
   });
 }

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { angebotSchema, berechneSummen, type PositionDaten } from "@autonomo/shared";
+import { angebotSchema, berechneSummen, emailSchema, formatDatum, t, type PositionDaten, type Sprache } from "@autonomo/shared";
 import { z } from "zod";
 import type { Deps } from "../app.js";
 import { protokolliere } from "../benutzer.js";
@@ -7,9 +7,13 @@ import { mitKontext, type Tx } from "../db.js";
 import { HttpFehler, validiere } from "../fehler.js";
 import { POSITIONS_ZAHLEN, schreibeAngebotsPositionen, zahlen } from "../positionen.js";
 import { naechsteNummer } from "../serien.js";
+import { neuesToken } from "../auth/tokens.js";
+import { heuteMadrid } from "../datum.js";
+import { angebotPdf } from "../pdf/index.js";
+import { sendeOderFehler } from "../versand.js";
 
 const SPALTEN = `id, kunde_id, nummer, titel, einleitung, gueltig_bis, status, gesendet_am, geoeffnet_am,
-  entschieden_am, ablehnungsgrund, unterschrift_name, erstellt_am, geaendert_am`;
+  entschieden_am, ablehnungsgrund, unterschrift_name, unterschrift_am, pdf_datei_id, pdf_hash, erstellt_am, geaendert_am`;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function ladeAngebot(tx: Tx, angebotId: string): Promise<Record<string, any> | null> {
@@ -34,7 +38,8 @@ export async function auftragAusAngebot(tx: Tx, betriebId: string, angebotId: st
   return auftrag!.id;
 }
 
-export async function angeboteRoutes(app: FastifyInstance, { sql, auth }: Deps) {
+export async function angeboteRoutes(app: FastifyInstance, deps: Deps) {
+  const { sql, auth, config, mail } = deps;
   const nurInhaber = { preHandler: [auth.imBetrieb, auth.nurRolle("inhaber")] };
   const lesen = { preHandler: [auth.imBetrieb, auth.nurRolle("inhaber", "kunde")] };
 
@@ -165,5 +170,56 @@ export async function angeboteRoutes(app: FastifyInstance, { sql, auth }: Deps) 
       await protokolliere(tx, { betriebId: k.betriebId, benutzerId: k.benutzerId, aktion: "abgelehnt", objekt: "angebot", objektId: angebotId });
     });
     return { ok: true };
+  });
+
+  app.get("/betriebe/:betriebId/angebote/:angebotId/pdf", lesen, async (req, reply) => {
+    const { angebotId } = req.params as { angebotId: string };
+    const k = req.kontext!;
+    const pdf = await mitKontext(sql, k, async (tx) => {
+      const [a] = await tx`select 1 from angebot where id = ${angebotId}`;
+      if (!a) throw new HttpFehler(404, "Angebot nicht gefunden");
+      return angebotPdf(tx, deps, k.betriebId, angebotId);
+    });
+    return reply.type("application/pdf").header("content-disposition", `inline; filename="${pdf.dateiname}"`).send(pdf.inhalt);
+  });
+
+  /**
+   * Angebot an den Kunden schicken: erzeugt einen neuen, nicht erratbaren Link (ein früherer wird ungültig),
+   * speichert die verschickte PDF-Fassung samt Hash und schickt die Mail in der Kundensprache.
+   * Mit ohneMail: true wird nur der Link erzeugt, z. B. zum Weiterleiten per WhatsApp.
+   */
+  app.post("/betriebe/:betriebId/angebote/:angebotId/senden", nurInhaber, async (req) => {
+    const { angebotId } = req.params as { angebotId: string };
+    const e = validiere(z.object({ an: emailSchema.optional(), ohneMail: z.boolean().default(false) }), req.body ?? {});
+    const k = req.kontext!;
+    return mitKontext(sql, k, async (tx) => {
+      const [a] = await tx<{ status: string; kundeId: string; nummer: string; titel: string; gueltigBis: string }[]>`
+        select status, kunde_id, nummer, titel, gueltig_bis from angebot where id = ${angebotId} for update`;
+      if (!a) throw new HttpFehler(404, "Angebot nicht gefunden");
+      if (a.status === "angenommen" || a.status === "abgelehnt") throw new HttpFehler(409, "Angebot ist schon entschieden", undefined, "schon_entschieden");
+      if (a.gueltigBis < heuteMadrid()) throw new HttpFehler(400, "Das Gültig-bis-Datum liegt in der Vergangenheit. Bitte zuerst verlängern.", undefined, "abgelaufen");
+      const [kunde] = await tx<{ name: string; email: string | null; sprache: Sprache }[]>`select name, email, sprache from kunde where id = ${a.kundeId}`;
+      const [betrieb] = await tx<{ name: string; email: string | null }[]>`select name, email from betrieb where id = ${k.betriebId}`;
+      const empfaenger = e.an ?? kunde!.email;
+      if (!e.ohneMail && !empfaenger) throw new HttpFehler(400, "Beim Kunden ist keine E-Mail-Adresse hinterlegt", undefined, "keine_email");
+
+      const { token, hash } = neuesToken();
+      await tx`update angebot set status = 'gesendet', gesendet_am = now(), geoeffnet_am = null, link_token_hash = ${hash}, geaendert_am = now()
+        where id = ${angebotId}`;
+      const pdf = await angebotPdf(tx, deps, k.betriebId, angebotId, { speichern: true, benutzerId: k.benutzerId });
+      const link = `${config.WEB_URL}/angebot/${token}`;
+      const sprache = kunde!.sprache;
+      if (!e.ohneMail) {
+        await sendeOderFehler(mail, {
+          an: empfaenger!,
+          antwortAn: betrieb!.email,
+          betreff: t(sprache, "mail.angebot.betreff", { nummer: a.nummer, betrieb: betrieb!.name }),
+          text: t(sprache, "mail.angebot.text", { name: kunde!.name, titel: a.titel, datum: formatDatum(a.gueltigBis, sprache), link, betrieb: betrieb!.name }),
+          anhaenge: [{ dateiname: pdf.dateiname, inhalt: pdf.inhalt, mime: "application/pdf" }],
+        });
+      }
+      await protokolliere(tx, { betriebId: k.betriebId, benutzerId: k.benutzerId, aktion: "gesendet", objekt: "angebot", objektId: angebotId, daten: { an: e.ohneMail ? null : empfaenger, pdfHash: pdf.sha256 } });
+      return { link, gesendetAn: e.ohneMail ? null : empfaenger, pdfHash: pdf.sha256 };
+    });
   });
 }

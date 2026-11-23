@@ -2,25 +2,23 @@ import type { FastifyInstance } from "fastify";
 import { monatSchema, monatsGrenzen } from "@autonomo/shared";
 import { z } from "zod";
 import type { Deps } from "../app.js";
+import { heuteMadrid } from "../datum.js";
 import { mitKontext } from "../db.js";
 import { validiere } from "../fehler.js";
 
-function heute(): string {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid" }).format(new Date());
-}
 
 /** Startseite des Inhabers: das Wichtigste des Monats auf einen Blick. */
 export async function uebersichtRoutes(app: FastifyInstance, { sql, auth }: Deps) {
   app.get("/betriebe/:betriebId/uebersicht", { preHandler: [auth.imBetrieb, auth.nurRolle("inhaber")] }, async (req) => {
     const q = validiere(z.object({ monat: monatSchema.optional() }), req.query);
-    const monat = q.monat ?? heute().slice(0, 7);
+    const monat = q.monat ?? heuteMadrid().slice(0, 7);
     const { von, bis } = monatsGrenzen(monat);
     const k = req.kontext!;
     return mitKontext(sql, k, async (tx) => {
       const [offen] = await tx<{ anzahl: string; summe: string; ueberfaelligAnzahl: string; ueberfaelligSumme: string }[]>`
         select count(*) as anzahl, coalesce(sum(summe_cent), 0) as summe,
-          count(*) filter (where faellig_am < ${heute()}::date) as ueberfaellig_anzahl,
-          coalesce(sum(summe_cent) filter (where faellig_am < ${heute()}::date), 0) as ueberfaellig_summe
+          count(*) filter (where faellig_am < ${heuteMadrid()}::date) as ueberfaellig_anzahl,
+          coalesce(sum(summe_cent) filter (where faellig_am < ${heuteMadrid()}::date), 0) as ueberfaellig_summe
         from rechnung where status = 'ausgestellt'`;
       const [entwuerfe] = await tx<{ anzahl: string }[]>`select count(*) as anzahl from rechnung where status = 'entwurf'`;
       const [umsatz] = await tx<{ basis: string }[]>`

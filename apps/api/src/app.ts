@@ -6,6 +6,11 @@ import type { Config } from "./config.js";
 import type { Sql } from "./db.js";
 import { HttpFehler } from "./fehler.js";
 import type { MailVersand } from "./mail.js";
+import { BILD_TYPEN } from "./bilder.js";
+import type { PdfDrucker } from "./pdf/browser.js";
+import type { Speicher } from "./speicher.js";
+import { fotoRoutes } from "./routes/fotos.js";
+import { oeffentlichRoutes } from "./routes/oeffentlich.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
 import { betriebRoutes } from "./routes/betriebe.js";
@@ -23,12 +28,25 @@ export interface Deps {
   config: Config;
   mail: MailVersand;
   auth: Auth;
+  speicher: Speicher;
+  pdf: PdfDrucker;
 }
 
-export async function baueApp(opts: { sql: Sql; config: Config; mail: MailVersand; logger?: boolean }): Promise<FastifyInstance> {
+export interface AppOptionen {
+  sql: Sql;
+  config: Config;
+  mail: MailVersand;
+  speicher: Speicher;
+  pdf: PdfDrucker;
+  logger?: boolean;
+}
+
+export async function baueApp(opts: AppOptionen): Promise<FastifyInstance> {
   const app = Fastify({ logger: opts.logger ?? false, trustProxy: true, bodyLimit: 1024 * 1024 });
   await app.register(cookie);
   await app.register(rateLimit, { global: false });
+  // Fotos und Logos werden als rohe Bilddaten hochgeladen (einfach für die Handy-App)
+  app.addContentTypeParser(BILD_TYPEN, { parseAs: "buffer", bodyLimit: 25 * 1024 * 1024 }, (_req, body, done) => done(null, body));
 
   app.setErrorHandler((err, req, reply) => {
     if (err instanceof HttpFehler) {
@@ -49,6 +67,7 @@ export async function baueApp(opts: { sql: Sql; config: Config; mail: MailVersan
   });
 
   const deps: Deps = { ...opts, auth: erstelleAuth(opts.sql) };
+  app.addHook("onClose", async () => opts.pdf.schliessen());
 
   app.get("/health", async () => {
     await opts.sql`select 1`;
@@ -67,6 +86,8 @@ export async function baueApp(opts: { sql: Sql; config: Config; mail: MailVersan
     zeitRoutes,
     rechnungenRoutes,
     uebersichtRoutes,
+    fotoRoutes,
+    oeffentlichRoutes,
   ]) {
     await app.register(async (a) => routes(a, deps));
   }
