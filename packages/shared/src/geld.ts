@@ -29,3 +29,25 @@ export function rundeCent(wert: number): number {
   const betrag = Math.round(Math.abs(wert) * 1000) / 1000;
   return Math.sign(wert) * Math.round(betrag) || 0;
 }
+
+/**
+ * Eingabe in Euro (Komma oder Punkt, z. B. „1.234,50“, „35.5“, „700“) in Cent.
+ * Gibt null zurück, wenn die Eingabe keine Zahl ist.
+ */
+export function parseBetrag(eingabe: string): number | null {
+  const zahl = parseZahl(eingabe);
+  return zahl === null ? null : rundeCent(zahl * 100);
+}
+
+/** Zahl mit Komma oder Punkt als Dezimaltrenner; Tausenderpunkte werden erkannt. */
+export function parseZahl(eingabe: string): number | null {
+  let s = eingabe.trim().replace(/\s|€/g, "");
+  if (!s) return null;
+  const komma = s.lastIndexOf(",");
+  const punkt = s.lastIndexOf(".");
+  if (komma > punkt) s = s.replace(/\./g, "").replace(",", ".");
+  else if (punkt > komma && komma >= 0) s = s.replace(/,/g, "");
+  else if (komma < 0 && (s.match(/\./g)?.length ?? 0) > 1) s = s.replace(/\./g, "");
+  if (!/^-?\d+(\.\d+)?$/.test(s)) return null;
+  return Number(s);
+}

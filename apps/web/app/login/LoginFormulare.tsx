@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { magicLinkAnfordern, passwortLogin, type LoginZustand } from "../aktionen";
 
 interface Texte {
@@ -10,11 +10,17 @@ interface Texte {
   magicLink: string;
   gesendet: string;
   fehler: string;
+  code: string;
+  codeHinweis: string;
+  codeFalsch: string;
 }
 
 export function LoginFormulare({ texte }: { texte: Texte }) {
   const [linkZustand, linkAktion, linkLaeuft] = useActionState<LoginZustand, FormData>(magicLinkAnfordern, {});
   const [pwZustand, pwAktion, pwLaeuft] = useActionState<LoginZustand, FormData>(passwortLogin, {});
+  // Kontrollierte Felder, damit E-Mail und Passwort stehen bleiben, wenn danach der Code abgefragt wird
+  const [email, setEmail] = useState("");
+  const [passwort, setPasswort] = useState("");
 
   return (
     <>
@@ -27,12 +33,24 @@ export function LoginFormulare({ texte }: { texte: Texte }) {
       <div className="trenner">—</div>
       <form action={pwAktion} className="karte">
         <label htmlFor="pw-email">{texte.email}</label>
-        <input id="pw-email" name="email" type="email" autoComplete="username" required />
+        <input id="pw-email" name="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <label htmlFor="pw">{texte.passwort}</label>
-        <input id="pw" name="passwort" type="password" autoComplete="current-password" required />
+        <input id="pw" name="passwort" type="password" autoComplete="current-password" required value={passwort} onChange={(e) => setPasswort(e.target.value)} />
+        {pwZustand.codeNoetig && <CodeFeld texte={texte} falsch={pwZustand.codeFalsch} />}
         <button disabled={pwLaeuft}>{texte.absenden}</button>
         {pwZustand.fehler && <p className="fehler">{texte.fehler}</p>}
       </form>
+    </>
+  );
+}
+
+export function CodeFeld({ texte, falsch }: { texte: Pick<Texte, "code" | "codeHinweis" | "codeFalsch">; falsch?: boolean }) {
+  return (
+    <>
+      <label htmlFor="code">{texte.code}</label>
+      <input id="code" name="code" autoComplete="one-time-code" inputMode="text" required autoFocus maxLength={20} />
+      <p className="hinweis klein">{texte.codeHinweis}</p>
+      {falsch && <p className="fehler">{texte.codeFalsch}</p>}
     </>
   );
 }

@@ -74,6 +74,10 @@ PDFs für Angebote und Rechnungen erzeugt die API mit dem vorhandenen Browser: u
    ```
 4. Den QR-Code mit dem Handy scannen. Handy und PC müssen im selben WLAN sein. Falls die Windows-Firewall fragt, den Zugriff auf Port 4002 im privaten Netzwerk erlauben.
 
+Die App hat drei Reiter: **Heute** (Timer, Zeit nachtragen, letzte Einträge), **Aufgaben** (abhaken, Notizen, Fotos aufnehmen) und **Mehr** (Sprache, Face ID / Fingerabdruck, Übertragungsstatus, Abmelden). Alles davon geht auch ohne Netz: Änderungen werden auf dem Handy gespeichert und automatisch übertragen, sobald wieder Verbindung besteht. Oben steht dann, wie viele Änderungen noch fehlen. Zum Ausprobieren einfach WLAN und mobile Daten ausschalten.
+
+In Expo Go fragt iOS statt Face ID nach dem Gerätecode; echtes Face ID gibt es erst in der fertig gebauten App.
+
 ### Prüfen
 
 ```sh

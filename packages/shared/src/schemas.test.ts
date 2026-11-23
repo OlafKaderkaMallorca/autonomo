@@ -78,3 +78,17 @@ describe("Formatierung", () => {
     expect(monatsGrenzen("2026-02")).toEqual({ von: "2026-02-01", bis: "2026-02-28" });
   });
 });
+
+import { parseBetrag } from "./geld.js";
+describe("parseBetrag", () => {
+  it("versteht deutsche, spanische und englische Schreibweisen", () => {
+    expect(parseBetrag("700")).toBe(70000);
+    expect(parseBetrag("35,50")).toBe(3550);
+    expect(parseBetrag("35.5")).toBe(3550);
+    expect(parseBetrag("1.234,56 €")).toBe(123456);
+    expect(parseBetrag("1,234.56")).toBe(123456);
+    expect(parseBetrag("-12,5")).toBe(-1250);
+    expect(parseBetrag("abc")).toBeNull();
+    expect(parseBetrag("")).toBeNull();
+  });
+});

@@ -52,9 +52,14 @@ export async function aufgabenRoutes(app: FastifyInstance, { sql, auth }: Deps) 
     const g = await mitKontext(sql, k, async (tx) => {
       const [auftrag] = await tx`select 1 from auftrag where id = ${e.auftragId}`;
       if (!auftrag) throw new HttpFehler(404, "Auftrag nicht gefunden");
+      if (e.id) {
+        // Erneut gesendet (Offline-Abgleich): vorhandene Aufgabe zurückgeben statt doppelt anlegen
+        const vorhanden = await ladeAufgabe(tx, e.id);
+        if (vorhanden) return vorhanden;
+      }
       const [neu] = await tx<{ id: string }[]>`
-        insert into aufgabe (betrieb_id, auftrag_id, titel, beschreibung, faellig_am, sichtbar_fuer_kunde, erstellt_von, erstellt_von_rolle)
-        values (${k.betriebId}, ${e.auftragId}, ${e.titel}, ${e.beschreibung ?? null}, ${e.faelligAm ?? null},
+        insert into aufgabe (id, betrieb_id, auftrag_id, titel, beschreibung, faellig_am, sichtbar_fuer_kunde, erstellt_von, erstellt_von_rolle)
+        values (${e.id ?? tx`gen_random_uuid()`}, ${k.betriebId}, ${e.auftragId}, ${e.titel}, ${e.beschreibung ?? null}, ${e.faelligAm ?? null},
                 ${e.sichtbarFuerKunde}, ${k.benutzerId}, 'inhaber')
         returning id`;
       await protokolliere(tx, { betriebId: k.betriebId, benutzerId: k.benutzerId, aktion: "angelegt", objekt: "aufgabe", objektId: neu!.id });
@@ -78,6 +83,13 @@ export async function aufgabenRoutes(app: FastifyInstance, { sql, auth }: Deps) 
     );
     if (Object.keys(felder).length === 0) throw new HttpFehler(400, "Keine Änderungen");
     return mitKontext(sql, k, async (tx) => {
+      if (e.stand) {
+        const [alt] = await tx<{ geaendertAm: Date }[]>`select geaendert_am from aufgabe where id = ${aufgabeId} for update`;
+        if (!alt) throw new HttpFehler(404, "Aufgabe nicht gefunden");
+        if (alt.geaendertAm.getTime() > new Date(e.stand).getTime()) {
+          throw new HttpFehler(409, "Die Aufgabe wurde inzwischen woanders geändert", await ladeAufgabe(tx, aufgabeId), "konflikt");
+        }
+      }
       const [ok] = await tx`update aufgabe set ${tx(felder)}, geaendert_am = now(),
           erledigt_am = case when ${e.status ?? null}::text is null then erledigt_am
                              when ${e.status ?? null} = 'erledigt' then coalesce(erledigt_am, now()) else null end
@@ -106,8 +118,12 @@ export async function aufgabenRoutes(app: FastifyInstance, { sql, auth }: Deps) 
     const notiz = await mitKontext(sql, k, async (tx) => {
       const [g] = await tx`select 1 from aufgabe where id = ${aufgabeId}`;
       if (!g) throw new HttpFehler(404, "Aufgabe nicht gefunden");
-      const [n] = await tx`insert into aufgabe_notiz (betrieb_id, aufgabe_id, benutzer_id, text, sichtbar_fuer_kunde)
-        values (${k.betriebId}, ${aufgabeId}, ${k.benutzerId}, ${e.text}, ${e.sichtbarFuerKunde})
+      if (e.id) {
+        const [vorhanden] = await tx`select id, text, sichtbar_fuer_kunde, erstellt_am from aufgabe_notiz where id = ${e.id} and aufgabe_id = ${aufgabeId}`;
+        if (vorhanden) return vorhanden;
+      }
+      const [n] = await tx`insert into aufgabe_notiz (id, betrieb_id, aufgabe_id, benutzer_id, text, sichtbar_fuer_kunde)
+        values (${e.id ?? tx`gen_random_uuid()`}, ${k.betriebId}, ${aufgabeId}, ${k.benutzerId}, ${e.text}, ${e.sichtbarFuerKunde})
         returning id, text, sichtbar_fuer_kunde, erstellt_am`;
       return n;
     });

@@ -17,7 +17,10 @@ const SPALTEN = `id, kunde_id, nummer, titel, einleitung, gueltig_bis, status, g
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function ladeAngebot(tx: Tx, angebotId: string): Promise<Record<string, any> | null> {
-  const [angebot] = await tx<Record<string, any>[]>`select ${tx.unsafe(SPALTEN)} from angebot where id = ${angebotId}`;
+  const [angebot] = await tx<Record<string, any>[]>`select ${tx.unsafe(SPALTEN)},
+    (select name from kunde where id = angebot.kunde_id) as kunde_name,
+    (select id from auftrag where angebot_id = angebot.id) as auftrag_id
+    from angebot where id = ${angebotId}`;
   if (!angebot) return null;
   const positionen = (await tx`
     select id, pos, art, beschreibung, menge, einheit, preis_cent, iva_satz, stundenkontingent

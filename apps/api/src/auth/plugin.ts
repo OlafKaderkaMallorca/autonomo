@@ -28,17 +28,23 @@ function leseToken(req: FastifyRequest): string | undefined {
   return req.cookies?.[SITZUNGS_COOKIE];
 }
 
-export function erstelleAuth(sql: Sql) {
+export function erstelleAuth(sql: Sql, { inaktivTage = 14 }: { inaktivTage?: number } = {}) {
   /** preHandler: verlangt eine gültige Sitzung. */
   async function angemeldet(req: FastifyRequest, _reply: FastifyReply): Promise<void> {
     const token = leseToken(req);
     if (!token) throw new HttpFehler(401, "Nicht angemeldet");
-    const [zeile] = await sql<(Omit<AngemeldeterBenutzer, "sitzungId"> & { sitzungId: string })[]>`
-      select b.id, b.email, b.name, b.sprache, b.plattform_admin, s.id as sitzung_id
+    const [zeile] = await sql<(Omit<AngemeldeterBenutzer, "sitzungId"> & { sitzungId: string; zuletztAktivAm: Date })[]>`
+      select b.id, b.email, b.name, b.sprache, b.plattform_admin, s.id as sitzung_id, s.zuletzt_aktiv_am
       from sitzung s join benutzer b on b.id = s.benutzer_id
-      where s.token_hash = ${hashToken(token)} and s.laeuft_ab_am > now()`;
-    if (!zeile) throw new HttpFehler(401, "Sitzung abgelaufen");
-    req.benutzer = zeile;
+      where s.token_hash = ${hashToken(token)} and s.laeuft_ab_am > now()
+        and s.zuletzt_aktiv_am > now() - make_interval(days => ${inaktivTage})`;
+    if (!zeile) throw new HttpFehler(401, "Sitzung abgelaufen", undefined, "sitzung_abgelaufen");
+    // Aktivität höchstens alle 5 Minuten schreiben, nicht bei jeder Anfrage
+    if (Date.now() - zeile.zuletztAktivAm.getTime() > 5 * 60_000) {
+      await sql`update sitzung set zuletzt_aktiv_am = now() where id = ${zeile.sitzungId}`;
+    }
+    const { zuletztAktivAm: _z, ...benutzer } = zeile;
+    req.benutzer = benutzer;
   }
 
   /** preHandler: verlangt Mitgliedschaft im Betrieb aus :betriebId und setzt den RLS-Kontext. */

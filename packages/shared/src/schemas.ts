@@ -7,14 +7,18 @@ export const rolleSchema = z.enum(ROLLEN);
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 export const passwortSchema = z.string().min(10).max(200);
 
+/** Zweiter Faktor: 6-stelliger Code aus der Authenticator-App oder ein Notfallcode (abcd-efgh). */
+export const zweiterFaktorSchema = z.string().trim().min(6).max(20);
+
 export const passwortLoginSchema = z.object({
   email: emailSchema,
   passwort: z.string().min(1).max(200),
+  code: zweiterFaktorSchema.optional(),
 });
 export type PasswortLogin = z.infer<typeof passwortLoginSchema>;
 
 export const magicLinkAnfrageSchema = z.object({ email: emailSchema });
-export const magicLinkEinloesenSchema = z.object({ token: z.string().min(20).max(200) });
+export const magicLinkEinloesenSchema = z.object({ token: z.string().min(20).max(200), code: zweiterFaktorSchema.optional() });
 
 /** NIF/NIE/CIF grob prüfen (Format). Die Prüfziffer prüft istGueltigeSpanischeSteuernummer. */
 export const steuernummerSchema = z

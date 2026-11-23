@@ -25,6 +25,9 @@ export default async function LoginSeite({ searchParams }: { searchParams: Promi
           magicLink: t("login.magicLink"),
           gesendet: t("login.magicLinkGesendet"),
           fehler: t("login.fehler"),
+          code: t("login.code"),
+          codeHinweis: t("login.codeHinweis"),
+          codeFalsch: t("login.codeFalsch"),
         }}
       />
     </main>

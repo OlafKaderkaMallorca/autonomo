@@ -79,7 +79,8 @@ export async function uebersichtRoutes(app: FastifyInstance, { sql, auth }: Deps
             abrechenbarMinuten: Math.round(Number(z.abrechenbarMinuten)),
             pauschaleCent,
             // Wie viel bringt die Pauschale pro tatsächlich gearbeiteter Stunde?
-            effektiverStundensatzCent: pauschaleCent > 0 && minuten > 0 ? Math.round((pauschaleCent * 60) / minuten) : null,
+            // erst ab einer Stunde aussagekräftig, sonst entstehen absurde Werte
+            effektiverStundensatzCent: pauschaleCent > 0 && minuten >= 60 ? Math.round((pauschaleCent * 60) / minuten) : null,
           };
         }),
         laufenderTimer: timer ?? null,

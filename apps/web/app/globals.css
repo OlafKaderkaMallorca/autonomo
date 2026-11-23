@@ -76,3 +76,62 @@ button.klein { margin-top: 8px; padding: 6px 10px; font-size: 0.85rem; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 .erfolg { border-color: var(--accent); }
 .fuss { margin-top: 32px; text-align: center; }
+
+/* Arbeitsbereich des Betriebs */
+.app main { max-width: 760px; }
+.app.breit main { max-width: 1100px; }
+.kopfleiste { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--card); flex-wrap: wrap; }
+.betriebsname { font-weight: 700; color: var(--fg); text-decoration: none; }
+.kopf-rechts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kopf-rechts form button, .kopf-rechts button { margin-top: 0; }
+.hauptnav { display: flex; gap: 4px; padding: 6px 12px; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--card); }
+.hauptnav a { padding: 8px 12px; border-radius: 8px; text-decoration: none; color: var(--fg); white-space: nowrap; }
+.hauptnav a:hover { background: var(--bg); }
+.reiter { display: flex; gap: 4px; flex-wrap: wrap; margin: 8px 0 12px; }
+.reiter a { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); text-decoration: none; color: var(--fg); font-size: 0.9rem; }
+.reiter a[aria-current="page"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.zeile { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.zeile > :first-child { min-width: 0; }
+.kacheln { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 12px 0; }
+.kachel { display: flex; flex-direction: column; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: var(--fg); text-decoration: none; }
+.kachel strong { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.zweispaltig { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 900px) { .zweispaltig { grid-template-columns: 1fr 1fr; } }
+.raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 12px; }
+.raster .breit, .positionen .breit { grid-column: 1 / -1; }
+.raster label { margin-top: 10px; }
+textarea { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); font: inherit; }
+label.haken { display: flex; align-items: center; gap: 8px; color: var(--fg); }
+label.haken input { width: auto; }
+form.inline { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+form.inline button { margin-top: 0; }
+form.inline select { width: auto; max-width: 100%; }
+.filter { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+.filter input, .filter select { width: auto; }
+.filter label { margin: 0; }
+.filter button { margin-top: 0; }
+.knopf { display: inline-block; padding: 10px 16px; border-radius: 8px; background: var(--accent); color: var(--accent-fg); text-decoration: none; }
+.knopf.leise { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+.aktionen { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.aktionen > .knopf { align-self: flex-start; }
+button.gefahr { color: var(--error); border-color: var(--error); }
+.etikett { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.78rem; background: var(--bg); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.etikett-gesendet, .etikett-ausgestellt, .etikett-in_arbeit, .etikett-offen { color: #b45309; border-color: #f59e0b55; }
+.etikett-angenommen, .etikett-bezahlt, .etikett-aktiv, .etikett-erledigt { color: var(--accent); border-color: var(--accent); }
+.etikett-abgelehnt, .etikett-ueberfaellig { color: var(--error); border-color: var(--error); }
+.ohne-abstand { margin-top: 0; }
+details > summary { cursor: pointer; color: var(--accent); }
+.positionen { margin-top: 12px; }
+.position-zeile { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px 12px; margin: 0 0 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0 10px; }
+.position-zeile label { margin-top: 6px; }
+.link-kopieren { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.link-kopieren button { margin-top: 0; }
+.fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.fotos figure { margin: 0; }
+.fotos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block; }
+.foto-aktionen { display: flex; gap: 4px; }
+.foto-aktionen button { padding: 2px 8px; }
+h3 { font-size: 1rem; margin: 16px 0 6px; }
+.position-zeile select { width: auto; max-width: 100%; }
+.notfallcodes { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; font-size: 1.05rem; }
+.qr { display: block; background: #fff; border-radius: 8px; padding: 6px; margin: 8px 0; }

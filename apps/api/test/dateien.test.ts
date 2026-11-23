@@ -49,7 +49,9 @@ beforeAll(async () => {
   })).body.id;
   await rufe(olaf.token, "POST", b("/einladungen"), { email: "hans@mueller.de", name: "Hans Müller", rolle: "kunde", kundeId, sprache: "de" });
   kundeToken = await anmeldenPerLink(u, "hans@mueller.de");
-}, 60_000);
+  // Browser einmal vorab starten: der erste Start dauert auf CI-Rechnern mal 10, mal über 30 Sekunden
+  await u.pdf.drucke("<p>warm</p>");
+}, 120_000);
 
 afterAll(async () => {
   await u?.schliessen();
