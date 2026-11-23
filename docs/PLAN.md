@@ -1,6 +1,6 @@
 # Autónomo-App – Projektplan
 
-Stand: 23.11.2026 (ergänzt: mehrere Handwerker) · Status: **Entwurf, wartet auf Freigabe durch Olaf**
+Stand: 23.11.2026 (ergänzt: mehrere Handwerker) · Status: **Freigegeben durch Olaf am 23.11.2026** (drei Abo-Stufen, VeriFactu zahlt jeder Betrieb selbst)
 
 ## 1. Ziel
 
