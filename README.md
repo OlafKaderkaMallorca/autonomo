@@ -21,7 +21,7 @@ App für selbstständige Handwerker in Spanien (Autónomos): Kunden, Aufträge, 
 | `aktualisieren.cmd` | Neuen Stand von GitHub holen und danach alles einrichten (Pakete, Datenbank) |
 | `einrichten.cmd` | Einmalig: Pakete installieren, Datenbank starten, Demo-Daten anlegen |
 | `start.cmd` | Datenbank, API und Web-Portal starten, Browser öffnet sich auf http://localhost:3012 |
-| `stop.cmd` | Datenbank stoppen (Daten bleiben erhalten) |
+| `stop.cmd` | API, Web-Portal und Datenbank stoppen (Daten bleiben erhalten) |
 | `handy.cmd` | Handy-App über Expo Go starten (start.cmd muss laufen) |
 | `tests.cmd` | Typprüfung und Tests |
 
