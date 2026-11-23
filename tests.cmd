@@ -2,7 +2,7 @@
 rem Fenster bleibt bei einem Abbruch offen, damit die Fehlermeldung lesbar ist
 if not defined APUNTA_FENSTER (
   set APUNTA_FENSTER=1
-  cmd /k "%~f0" %*
+  cmd /k call "%~f0" %*
   exit /b
 )
 title ApuntaPro - Tests
