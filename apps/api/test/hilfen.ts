@@ -21,6 +21,7 @@ export interface TestUmgebung {
   sql: Sql;
   mails: Mail[];
   speicher: ReturnType<typeof speicherImRam>;
+  pdf: ReturnType<typeof erstellePdfDrucker>;
   ownerSql: postgres.Sql;
   schliessen(): Promise<void>;
 }
@@ -39,12 +40,13 @@ export async function testUmgebung(): Promise<TestUmgebung> {
   const sql = verbindeDb(config.DATABASE_URL);
   const mails: Mail[] = [];
   const speicher = speicherImRam();
+  const pdf = erstellePdfDrucker(process.env.PDF_BROWSER);
   const app = await baueApp({
     sql,
     config,
     mail: { sende: async (m) => void mails.push(m) },
     speicher,
-    pdf: erstellePdfDrucker(process.env.PDF_BROWSER),
+    pdf,
   });
 
   return {
@@ -52,6 +54,7 @@ export async function testUmgebung(): Promise<TestUmgebung> {
     sql,
     mails,
     speicher,
+    pdf,
     ownerSql,
     async schliessen() {
       await app.close();
