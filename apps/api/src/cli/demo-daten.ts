@@ -72,4 +72,4 @@ if (auftraege === 0) {
   }
 }
 await sql.end();
-console.log(`Demo-Daten bereit. Anmelden unter http://localhost:3002 mit ${EMAIL} / ${PASSWORT}`);
+console.log(`Demo-Daten bereit. Anmelden unter http://localhost:3012 mit ${EMAIL} / ${PASSWORT}`);

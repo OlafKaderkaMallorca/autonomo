@@ -20,7 +20,7 @@ App für selbstständige Handwerker in Spanien (Autónomos): Kunden, Aufträge, 
 |---|---|
 | `aktualisieren.cmd` | Neuen Stand von GitHub holen und danach alles einrichten (Pakete, Datenbank) |
 | `einrichten.cmd` | Einmalig: Pakete installieren, Datenbank starten, Demo-Daten anlegen |
-| `start.cmd` | Datenbank, API und Web-Portal starten, Browser öffnet sich auf http://localhost:3002 |
+| `start.cmd` | Datenbank, API und Web-Portal starten, Browser öffnet sich auf http://localhost:3012 |
 | `stop.cmd` | Datenbank stoppen (Daten bleiben erhalten) |
 | `handy.cmd` | Handy-App über Expo Go starten (start.cmd muss laufen) |
 | `tests.cmd` | Typprüfung und Tests |
@@ -29,7 +29,7 @@ Voraussetzungen: Node.js 24 und Docker Desktop. Die Skripte starten Docker Deskt
 
 ### Von Hand
 
-Ports: **Web-Portal 3002**, **API 4002**, **Datenbank 5434**. So kommt nichts mit anderen Projekten in die Quere.
+Ports: **Web-Portal 3012**, **API 4002**, **Datenbank 5434**. So kommt nichts mit anderen Projekten in die Quere.
 
 ### Einmalig
 
@@ -57,7 +57,7 @@ pnpm db:start      # nur bei der Docker-Variante
 pnpm dev           # startet API und Web-Portal
 ```
 
-Dann http://localhost:3002 öffnen und mit **olaf@demo.local** / **demo-passwort** anmelden.
+Dann http://localhost:3012 öffnen und mit **olaf@demo.local** / **demo-passwort** anmelden.
 
 Nach einem neuen Pull Request einfach `aktualisieren.cmd` doppelklicken: holt den neuen Stand und führt danach `einrichten.cmd` aus. Vorhandene Daten bleiben erhalten.
 
