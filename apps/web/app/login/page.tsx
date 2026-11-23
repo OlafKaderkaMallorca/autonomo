@@ -1,0 +1,28 @@
+import { aktuelleSprache, uebersetzer } from "@/lib/sprache";
+import { SprachWahl } from "../SprachWahl";
+import { LoginFormulare } from "./LoginFormulare";
+
+export default async function LoginSeite({ searchParams }: { searchParams: Promise<{ fehler?: string }> }) {
+  const sprache = await aktuelleSprache();
+  const t = uebersetzer(sprache);
+  const { fehler } = await searchParams;
+  return (
+    <main>
+      <div className="kopf">
+        <h1>{t("login.titel")}</h1>
+        <SprachWahl sprache={sprache} />
+      </div>
+      {fehler === "link" && <p className="fehler">Link ungültig oder abgelaufen / Enlace no válido o caducado</p>}
+      <LoginFormulare
+        texte={{
+          email: t("login.email"),
+          passwort: t("login.passwort"),
+          absenden: t("login.absenden"),
+          magicLink: t("login.magicLink"),
+          gesendet: t("login.magicLinkGesendet"),
+          fehler: t("login.fehler"),
+        }}
+      />
+    </main>
+  );
+}
