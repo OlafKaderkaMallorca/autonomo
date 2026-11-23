@@ -1,20 +1,22 @@
 @echo off
-rem Gemeinsame Prüfungen: Node.js, pnpm und Docker Desktop. Wird von den anderen .cmd-Dateien aufgerufen.
+rem Gemeinsame Pruefungen: Node.js, pnpm und Docker Desktop. Wird von den anderen .cmd-Dateien aufgerufen.
 
 where node >nul 2>&1
 if errorlevel 1 (
-  echo [FEHLER] Node.js ist nicht installiert. Bitte Node.js 24 (LTS) von https://nodejs.org installieren.
+  echo [FEHLER] Node.js ist nicht installiert. Bitte Node.js 24 LTS von https://nodejs.org installieren.
   exit /b 1
 )
 
 where pnpm >nul 2>&1
 if errorlevel 1 (
-  echo pnpm wird eingerichtet ...
-  call corepack enable
+  echo pnpm wird installiert ...
+  call npm install -g pnpm@10
   if errorlevel 1 (
-    echo [FEHLER] corepack enable ist fehlgeschlagen. Terminal einmal als Administrator starten und erneut versuchen.
+    echo [FEHLER] pnpm konnte nicht installiert werden.
     exit /b 1
   )
+  echo pnpm ist installiert. Bitte dieses Fenster schliessen und die Datei erneut starten.
+  exit /b 1
 )
 
 docker info >nul 2>&1

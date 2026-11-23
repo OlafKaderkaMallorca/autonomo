@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 >nul
 title ApuntaPro - Stopp
 cd /d "%~dp0"
 echo Datenbank wird gestoppt (die Daten bleiben erhalten) ...
