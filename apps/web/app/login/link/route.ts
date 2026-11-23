@@ -13,7 +13,12 @@ export async function GET(req: NextRequest) {
     body: JSON.stringify({ token }),
     cache: "no-store",
   });
-  if (!res.ok) return NextResponse.redirect(new URL("/login?fehler=link", basis));
+  if (!res.ok) {
+    const { code } = (await res.json().catch(() => ({}))) as { code?: string };
+    // Zwei-Faktor-Anmeldung: Link ist noch gültig, erst den Code abfragen
+    if (code === "zweiter_faktor") return NextResponse.redirect(new URL(`/login/code?token=${encodeURIComponent(token)}`, basis));
+    return NextResponse.redirect(new URL("/login?fehler=link", basis));
+  }
   const { token: sitzung } = (await res.json()) as { token: string };
   const antwort = NextResponse.redirect(new URL("/", basis));
   antwort.cookies.set(SITZUNGS_COOKIE, sitzung, {

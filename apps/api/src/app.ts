@@ -66,7 +66,7 @@ export async function baueApp(opts: AppOptionen): Promise<FastifyInstance> {
     return reply.code(500).send({ fehler: "Interner Fehler" });
   });
 
-  const deps: Deps = { ...opts, auth: erstelleAuth(opts.sql) };
+  const deps: Deps = { ...opts, auth: erstelleAuth(opts.sql, { inaktivTage: opts.config.SITZUNG_INAKTIV_TAGE }) };
   app.addHook("onClose", async () => opts.pdf.schliessen());
 
   app.get("/health", async () => {

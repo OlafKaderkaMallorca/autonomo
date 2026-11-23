@@ -8,7 +8,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "es.apuntapro.app"
+      "bundleIdentifier": "es.apuntapro.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "ApuntaPro nutzt Face ID, um die App zu entsperren."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +28,22 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      "expo-sqlite",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "ApuntaPro nutzt Face ID, um die App zu entsperren."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ApuntaPro braucht Zugriff auf deine Fotos, um Arbeitsfotos zu Aufgaben hinzuzufügen.",
+          "cameraPermission": "ApuntaPro braucht die Kamera für Arbeitsfotos zu Aufgaben.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "http://localhost:4002"

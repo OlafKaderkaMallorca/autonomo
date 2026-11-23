@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { materialSchema, timerStartSchema, zeiteintragSchema } from "@autonomo/shared";
+import { materialSchema, timerStartSchema, timerStoppSchema, zeiteintragSchema } from "@autonomo/shared";
 import { z } from "zod";
 import type { Deps } from "../app.js";
 import { protokolliere } from "../benutzer.js";
@@ -77,11 +77,15 @@ export async function zeitRoutes(app: FastifyInstance, { sql, auth }: Deps) {
     const ende = e.ende ? new Date(e.ende) : new Date(start.getTime() + e.dauerMinuten! * 60000);
     if (ende <= start) throw new HttpFehler(400, "Ende muss nach dem Start liegen", undefined, "ende_vor_start");
     const eintrag = await mitKontext(sql, k, async (tx) => {
+      if (e.id) {
+        const vorhanden = await ladeEintrag(tx, e.id);
+        if (vorhanden) return vorhanden;
+      }
       const abrechenbar = e.abrechenbar ?? (await standardAbrechenbar(tx, e.auftragId));
       await pruefeAufgabe(tx, e.auftragId, e.aufgabeId);
       const [neu] = await tx<{ id: string }[]>`
-        insert into zeiteintrag (betrieb_id, auftrag_id, aufgabe_id, benutzer_id, start, ende, notiz, abrechenbar)
-        values (${k.betriebId}, ${e.auftragId}, ${e.aufgabeId ?? null}, ${k.benutzerId}, ${start}, ${ende}, ${e.notiz ?? null}, ${abrechenbar})
+        insert into zeiteintrag (id, betrieb_id, auftrag_id, aufgabe_id, benutzer_id, start, ende, notiz, abrechenbar)
+        values (${e.id ?? tx`gen_random_uuid()`}, ${k.betriebId}, ${e.auftragId}, ${e.aufgabeId ?? null}, ${k.benutzerId}, ${start}, ${ende}, ${e.notiz ?? null}, ${abrechenbar})
         returning id`;
       return ladeEintrag(tx, neu!.id);
     });
@@ -99,14 +103,29 @@ export async function zeitRoutes(app: FastifyInstance, { sql, auth }: Deps) {
   app.post("/betriebe/:betriebId/timer/start", nurInhaber, async (req, reply) => {
     const e = validiere(timerStartSchema, req.body);
     const k = req.kontext!;
+    let start: Date | null = null;
+    if (e.start) {
+      start = new Date(e.start);
+      const alter = Date.now() - start.getTime();
+      if (alter < -5 * 60_000 || alter > 24 * 3600_000) {
+        throw new HttpFehler(400, "Startzeit muss innerhalb der letzten 24 Stunden liegen", undefined, "start_ungueltig");
+      }
+      if (start.getTime() > Date.now()) start = new Date();
+    }
     const t = await mitKontext(sql, k, async (tx) => {
+      if (e.id) {
+        // Erneut gesendet (Offline-Abgleich): gleicher Timer, nichts doppelt anlegen
+        const vorhanden = await ladeEintrag(tx, e.id);
+        if (vorhanden) return vorhanden;
+      }
       const [laeuft] = await tx`select id from zeiteintrag where ende is null and benutzer_id = ${k.benutzerId}`;
       if (laeuft) throw new HttpFehler(409, "Es läuft schon ein Timer", { id: laeuft.id }, "timer_laeuft");
       const abrechenbar = await standardAbrechenbar(tx, e.auftragId);
       await pruefeAufgabe(tx, e.auftragId, e.aufgabeId);
       const [neu] = await tx<{ id: string }[]>`
-        insert into zeiteintrag (betrieb_id, auftrag_id, aufgabe_id, benutzer_id, start, notiz, abrechenbar)
-        values (${k.betriebId}, ${e.auftragId}, ${e.aufgabeId ?? null}, ${k.benutzerId}, now(), ${e.notiz ?? null}, ${abrechenbar})
+        insert into zeiteintrag (id, betrieb_id, auftrag_id, aufgabe_id, benutzer_id, start, notiz, abrechenbar)
+        values (${e.id ?? tx`gen_random_uuid()`}, ${k.betriebId}, ${e.auftragId}, ${e.aufgabeId ?? null}, ${k.benutzerId},
+                ${start ?? tx`now()`}, ${e.notiz ?? null}, ${abrechenbar})
         returning id`;
       return ladeEintrag(tx, neu!.id);
     });
@@ -114,13 +133,19 @@ export async function zeitRoutes(app: FastifyInstance, { sql, auth }: Deps) {
   });
 
   app.post("/betriebe/:betriebId/timer/stopp", nurInhaber, async (req) => {
-    const { notiz } = validiere(z.object({ notiz: z.string().max(2000).optional() }), req.body ?? {});
+    const { notiz, ende, id } = validiere(timerStoppSchema, req.body ?? {});
     const k = req.kontext!;
+    // Offline gestoppt: Endzeit vom Gerät, aber nie in der Zukunft
+    const endeZeit = ende ? new Date(Math.min(new Date(ende).getTime(), Date.now())) : null;
     return mitKontext(sql, k, async (tx) => {
+      if (id) {
+        const [schon] = await tx<{ ende: Date | null }[]>`select ende from zeiteintrag where id = ${id} and benutzer_id = ${k.benutzerId}`;
+        if (schon?.ende) return ladeEintrag(tx, id); // schon gestoppt (erneut gesendet)
+      }
       // Mindestens eine Minute, damit ende > start gilt
       const [t] = await tx<{ id: string }[]>`
-        update zeiteintrag set ende = greatest(now(), start + interval '1 minute'), notiz = coalesce(${notiz ?? null}, notiz), geaendert_am = now()
-        where ende is null and benutzer_id = ${k.benutzerId} returning id`;
+        update zeiteintrag set ende = greatest(${endeZeit ?? tx`now()`}, start + interval '1 minute'), notiz = coalesce(${notiz ?? null}, notiz), geaendert_am = now()
+        where ende is null and benutzer_id = ${k.benutzerId} and (${id ?? null}::uuid is null or id = ${id ?? null}) returning id`;
       if (!t) throw new HttpFehler(404, "Es läuft kein Timer", undefined, "kein_timer");
       return ladeEintrag(tx, t.id);
     });

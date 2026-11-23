@@ -18,6 +18,8 @@ const schema = z.object({
   /** Optional: Pfad zu Chrome/Edge/Chromium für die PDF-Erzeugung. Leer = automatisch suchen. */
   PDF_BROWSER: z.string().optional(),
   SITZUNG_TAGE: z.coerce.number().default(30),
+  /** Sitzung endet, wenn so viele Tage lang nichts passiert ist. */
+  SITZUNG_INAKTIV_TAGE: z.coerce.number().default(14),
   MAGIC_LINK_MINUTEN: z.coerce.number().default(15),
 });
 

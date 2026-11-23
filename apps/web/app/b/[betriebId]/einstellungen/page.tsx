@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { einstellungenSpeichern, logoHochladen, serieAnlegen } from "../aktionen";
 import { Formular } from "../_ui/Formular";
 import { seitenKontext } from "../_ui/daten";
+import { Sicherheit } from "./Sicherheit";
 
 interface Einstellungen {
   betrieb: {
@@ -27,7 +28,17 @@ interface Einstellungen {
 export default async function EinstellungenSeite({ params }: { params: Promise<{ betriebId: string }> }) {
   const { betriebId } = await params;
   const { t, sprache, b } = await seitenKontext(betriebId);
-  const { betrieb: e, serien, fehlendFuerRechnungen } = await api<Einstellungen>(`/betriebe/${b}/einstellungen`);
+  const [{ betrieb: e, serien, fehlendFuerRechnungen }, ich] = await Promise.all([
+    api<Einstellungen>(`/betriebe/${b}/einstellungen`),
+    api<{ zweiFaktor: boolean }>("/me"),
+  ]);
+  const sicherheitsTexte = {
+    titel: t("sicherheit.titel"), zweiFaktor: t("sicherheit.zweiFaktor"), aus: t("sicherheit.aus"), an: t("sicherheit.an"),
+    einrichten: t("sicherheit.einrichten"), scannen: t("sicherheit.scannen"), schluessel: t("sicherheit.schluessel"),
+    einschalten: t("sicherheit.einschalten"), notfallcodes: t("sicherheit.notfallcodes"), ausschalten: t("sicherheit.ausschalten"),
+    ausschaltenHinweis: t("sicherheit.ausschaltenHinweis"), alleAbmelden: t("sicherheit.alleAbmelden"),
+    alleAbmeldenFrage: t("sicherheit.alleAbmeldenFrage"), alleAbmeldenHinweis: t("sicherheit.alleAbmeldenHinweis"), code: t("login.code"),
+  };
   const euro = (cent: number | null) => (cent === null ? "" : formatZahl(cent / 100, sprache).replace(/\s/g, ""));
   const feldname: Record<string, string> = { name: t("feld.name"), nif: "NIF", adresse: t("feld.adresse") };
 
@@ -96,6 +107,8 @@ export default async function EinstellungenSeite({ params }: { params: Promise<{
               </Formular>
             </details>
           </div>
+
+          <Sicherheit aktiv={ich.zweiFaktor} texte={sicherheitsTexte} />
         </section>
       </div>
     </>

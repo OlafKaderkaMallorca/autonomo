@@ -33,22 +33,28 @@ export async function fotoRoutes(app: FastifyInstance, { sql, auth, speicher }: 
         art: artSchema.default("arbeit"),
         beschreibung: z.string().trim().max(1000).optional(),
         sichtbar: z.enum(["ja", "nein"]).default("ja"),
+        /** Vom Gerät vergebene ID (Offline-Abgleich): erneutes Hochladen legt kein zweites Foto an. */
+        id: z.string().uuid().optional(),
       }),
       req.query,
     );
+    const k = req.kontext!;
+    if (q.id) {
+      const [vorhanden] = await mitKontext(sql, k, (tx) => tx`select ${tx.unsafe(FOTO_SPALTEN)} from foto where id = ${q.id!}`);
+      if (vorhanden) return reply.code(200).send(vorhanden);
+    }
     if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
       throw new HttpFehler(415, "Bitte das Foto als Bilddatei senden (image/jpeg oder image/png)", undefined, "bild_fehlt");
     }
     const bild = await verarbeiteFoto(req.body);
-    const k = req.kontext!;
     const foto = await mitKontext(sql, k, async (tx) => {
       const [a] = await tx`select 1 from aufgabe where id = ${aufgabeId}`;
       if (!a) throw new HttpFehler(404, "Aufgabe nicht gefunden");
       const gross = await speichereDatei(tx, speicher, { betriebId: k.betriebId, art: "foto", inhalt: bild.gross, mime: "image/jpeg", benutzerId: k.benutzerId });
       const klein = await speichereDatei(tx, speicher, { betriebId: k.betriebId, art: "foto_klein", inhalt: bild.klein, mime: "image/jpeg", benutzerId: k.benutzerId });
       const [f] = await tx`
-        insert into foto (betrieb_id, aufgabe_id, datei_id, vorschau_datei_id, art, beschreibung, sichtbar_fuer_kunde, breite, hoehe, erstellt_von, erstellt_von_rolle)
-        values (${k.betriebId}, ${aufgabeId}, ${gross.id}, ${klein.id}, ${q.art}, ${q.beschreibung || null}, ${q.sichtbar === "ja"},
+        insert into foto (id, betrieb_id, aufgabe_id, datei_id, vorschau_datei_id, art, beschreibung, sichtbar_fuer_kunde, breite, hoehe, erstellt_von, erstellt_von_rolle)
+        values (${q.id ?? tx`gen_random_uuid()`}, ${k.betriebId}, ${aufgabeId}, ${gross.id}, ${klein.id}, ${q.art}, ${q.beschreibung || null}, ${q.sichtbar === "ja"},
                 ${bild.breite}, ${bild.hoehe}, ${k.benutzerId}, 'inhaber')
         returning ${tx.unsafe(FOTO_SPALTEN)}`;
       await protokolliere(tx, { betriebId: k.betriebId, benutzerId: k.benutzerId, aktion: "angelegt", objekt: "foto", objektId: f!.id, daten: { aufgabeId } });

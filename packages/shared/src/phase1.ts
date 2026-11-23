@@ -89,7 +89,11 @@ export const auftragAendernSchema = z.object({
   positionen: z.array(positionSchema.extend({ aktiv: z.boolean().default(true) })).max(200).optional(),
 });
 
+/** Vom Gerät vergebene ID, damit ein offline erfasster Datensatz beim erneuten Senden nicht doppelt entsteht. */
+const geraeteId = z.string().uuid().optional();
+
 export const aufgabeSchema = z.object({
+  id: geraeteId,
   auftragId: z.string().uuid(),
   titel: text(200),
   beschreibung: z.string().max(5000).nullish(),
@@ -103,15 +107,22 @@ export const aufgabeAendernSchema = z.object({
   faelligAm: datum.nullish(),
   sichtbarFuerKunde: z.boolean().optional(),
   status: z.enum(["offen", "in_arbeit", "erledigt"]).optional(),
+  /**
+   * Stand (geaendertAm), auf dem die Änderung beruht. Ist die Aufgabe inzwischen woanders
+   * geändert worden, antwortet die API mit 409 „konflikt“ und der aktuellen Fassung.
+   */
+  stand: z.string().datetime({ offset: true }).optional(),
 });
 
 export const notizSchema = z.object({
+  id: geraeteId,
   text: text(5000),
   sichtbarFuerKunde: z.boolean().default(false),
 });
 
 export const zeiteintragSchema = z
   .object({
+    id: geraeteId,
     auftragId: z.string().uuid(),
     aufgabeId: z.string().uuid().nullish(),
     start: z.string().datetime({ offset: true }),
@@ -123,9 +134,20 @@ export const zeiteintragSchema = z
   .refine((z) => !(z.ende && z.dauerMinuten), { message: "Entweder Ende oder Dauer angeben" });
 
 export const timerStartSchema = z.object({
+  id: geraeteId,
   auftragId: z.string().uuid(),
   aufgabeId: z.string().uuid().nullish(),
   notiz: z.string().max(2000).nullish(),
+  /** Offline gestartet: tatsächliche Startzeit vom Gerät (höchstens 24 Stunden zurück). */
+  start: z.string().datetime({ offset: true }).optional(),
+});
+
+export const timerStoppSchema = z.object({
+  notiz: z.string().max(2000).optional(),
+  /** Offline gestoppt: tatsächliche Endzeit vom Gerät. */
+  ende: z.string().datetime({ offset: true }).optional(),
+  /** Nur diesen Timer stoppen (Abgleich vom Gerät). */
+  id: z.string().uuid().optional(),
 });
 
 export const materialSchema = z.object({
