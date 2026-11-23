@@ -1,0 +1,13 @@
+{
+  "name": "autonomo",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "dev:api": "pnpm --filter @autonomo/api dev",
+    "dev:web": "pnpm --filter @autonomo/web dev",
+    "dev:mobile": "pnpm --filter @autonomo/mobile start"
+  }
+}
