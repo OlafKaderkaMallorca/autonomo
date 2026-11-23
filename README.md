@@ -18,6 +18,7 @@ App für selbstständige Handwerker in Spanien (Autónomos): Kunden, Aufträge, 
 
 | Datei | Wofür |
 |---|---|
+| `aktualisieren.cmd` | Neuen Stand von GitHub holen und danach alles einrichten (Pakete, Datenbank) |
 | `einrichten.cmd` | Einmalig: Pakete installieren, Datenbank starten, Demo-Daten anlegen |
 | `start.cmd` | Datenbank, API und Web-Portal starten, Browser öffnet sich auf http://localhost:3002 |
 | `stop.cmd` | Datenbank stoppen (Daten bleiben erhalten) |
@@ -58,7 +59,7 @@ pnpm dev           # startet API und Web-Portal
 
 Dann http://localhost:3002 öffnen und mit **olaf@demo.local** / **demo-passwort** anmelden.
 
-Nach einem Update mit neuen Demo-Daten (z. B. Phase 1: Aufträge, Stunden des Vormonats) einfach `einrichten.cmd` bzw. `pnpm run einrichten` noch einmal ausführen. Vorhandene Daten bleiben erhalten.
+Nach einem neuen Pull Request einfach `aktualisieren.cmd` doppelklicken: holt den neuen Stand und führt danach `einrichten.cmd` aus. Vorhandene Daten bleiben erhalten.
 
 E-Mails (Anmeldelinks, Angebote, Rechnungen) werden lokal nicht wirklich verschickt. Sie landen im Test-Postfach **Mailpit**: http://localhost:8026 (startet zusammen mit der Datenbank). Ohne Docker bleibt `SMTP_URL` in `apps/api/.env` leer, dann erscheinen die Mails im Terminal, in dem `pnpm dev` läuft.
 
