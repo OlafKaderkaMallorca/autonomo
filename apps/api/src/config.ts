@@ -9,7 +9,7 @@ const schema = z.object({
   /** Verbindung als Eigentümer der Tabellen, nur für Migrationen. */
   MIGRATION_DATABASE_URL: z.string().url().optional(),
   /** Öffentliche Adresse des Web-Portals, für Anmeldelinks. */
-  WEB_URL: z.string().url().default("http://localhost:3002"),
+  WEB_URL: z.string().url().default("http://localhost:3012"),
   /** SMTP-Verbindung, z. B. smtp://user:pass@smtp-relay.brevo.com:587. Leer = Mails nur ins Log. */
   SMTP_URL: z.string().optional(),
   MAIL_ABSENDER: z.string().default("ApuntaPro <no-reply@localhost>"),
