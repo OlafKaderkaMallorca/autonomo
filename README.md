@@ -24,7 +24,7 @@ App für selbstständige Handwerker in Spanien (Autónomos): Kunden, Aufträge, 
 | `handy.cmd` | Handy-App über Expo Go starten (start.cmd muss laufen) |
 | `tests.cmd` | Typprüfung und Tests |
 
-Voraussetzungen: Node.js 22 und Docker Desktop. Die Skripte starten Docker Desktop bei Bedarf selbst.
+Voraussetzungen: Node.js 24 und Docker Desktop. Die Skripte starten Docker Desktop bei Bedarf selbst.
 
 ### Von Hand
 
@@ -32,7 +32,7 @@ Ports: **Web-Portal 3002**, **API 4002**, **Datenbank 5434**. So kommt nichts mi
 
 ### Einmalig
 
-1. **Node.js 22** installieren (https://nodejs.org) und danach in einem Terminal `corepack enable` ausführen. Damit ist `pnpm` verfügbar.
+1. **Node.js 24** installieren (https://nodejs.org) und danach in einem Terminal `corepack enable` ausführen. Damit ist `pnpm` verfügbar.
 2. **Datenbank**, eine der beiden Varianten:
    - **Mit Docker Desktop** (einfachste Variante): `pnpm db:start`
    - **Ohne Docker**: PostgreSQL 16 installieren und als Superuser ausführen:

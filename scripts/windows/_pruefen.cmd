@@ -3,7 +3,7 @@ rem Gemeinsame Prüfungen: Node.js, pnpm und Docker Desktop. Wird von den andere
 
 where node >nul 2>&1
 if errorlevel 1 (
-  echo [FEHLER] Node.js ist nicht installiert. Bitte Node.js 22 von https://nodejs.org installieren.
+  echo [FEHLER] Node.js ist nicht installiert. Bitte Node.js 24 (LTS) von https://nodejs.org installieren.
   exit /b 1
 )
 
