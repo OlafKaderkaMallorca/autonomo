@@ -18,4 +18,8 @@ export const de = {
   "sprache": "Sprache",
   "mail.magicLink.betreff": "Dein Anmeldelink für ApuntaPro",
   "mail.magicLink.text": "Hallo,\n\nmit diesem Link meldest du dich an (gültig für {minuten} Minuten):\n{link}\n\nFalls du das nicht angefordert hast, ignoriere diese E-Mail.",
+  "rechnung.pos.stunden": "Arbeitsstunden – {auftrag}",
+  "rechnung.pos.pauschale": "{beschreibung} – {monat}",
+  "rechnung.pos.material": "Material: {beschreibung}",
+  "rechnung.storno": "Storno zu Rechnung {nummer}: {beschreibung}",
 } as const;

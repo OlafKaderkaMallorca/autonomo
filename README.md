@@ -58,6 +58,8 @@ pnpm dev           # startet API und Web-Portal
 
 Dann http://localhost:3002 öffnen und mit **olaf@demo.local** / **demo-passwort** anmelden.
 
+Nach einem Update mit neuen Demo-Daten (z. B. Phase 1: Aufträge, Stunden des Vormonats) einfach `einrichten.cmd` bzw. `pnpm run einrichten` noch einmal ausführen. Vorhandene Daten bleiben erhalten.
+
 Anmeldelinks per E-Mail werden lokal nicht verschickt. Sie erscheinen im Terminal, in dem `pnpm dev` läuft.
 
 ### Handy-App

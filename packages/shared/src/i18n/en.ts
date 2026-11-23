@@ -20,4 +20,8 @@ export const en: Uebersetzungen = {
   "sprache": "Language",
   "mail.magicLink.betreff": "Your ApuntaPro sign-in link",
   "mail.magicLink.text": "Hello,\n\nUse this link to sign in (valid for {minuten} minutes):\n{link}\n\nIf you did not request this, please ignore this email.",
+  "rechnung.pos.stunden": "Working hours – {auftrag}",
+  "rechnung.pos.pauschale": "{beschreibung} – {monat}",
+  "rechnung.pos.material": "Material: {beschreibung}",
+  "rechnung.storno": "Cancellation of invoice {nummer}: {beschreibung}",
 };

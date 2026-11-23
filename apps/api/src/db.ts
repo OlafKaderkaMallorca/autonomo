@@ -5,7 +5,12 @@ export type Sql = postgres.Sql;
 export type Tx = postgres.TransactionSql;
 
 export function verbindeDb(url: string): Sql {
-  return postgres(url, { max: 10, transform: postgres.camel });
+  return postgres(url, {
+    max: 10,
+    transform: postgres.camel,
+    // Kalenderdaten (date) als "YYYY-MM-DD" lassen, nicht in JS-Date mit Zeitzone umwandeln
+    types: { datum: { to: 1082, from: [1082], serialize: (x: string) => x, parse: (x: string) => x } },
+  });
 }
 
 export interface Kontext {

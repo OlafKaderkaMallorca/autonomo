@@ -20,4 +20,8 @@ export const es: Uebersetzungen = {
   "sprache": "Idioma",
   "mail.magicLink.betreff": "Tu enlace de acceso a ApuntaPro",
   "mail.magicLink.text": "Hola:\n\nCon este enlace inicias sesión (válido durante {minuten} minutos):\n{link}\n\nSi no lo has solicitado, ignora este correo.",
+  "rechnung.pos.stunden": "Horas de trabajo – {auftrag}",
+  "rechnung.pos.pauschale": "{beschreibung} – {monat}",
+  "rechnung.pos.material": "Material: {beschreibung}",
+  "rechnung.storno": "Anulación de la factura {nummer}: {beschreibung}",
 };
