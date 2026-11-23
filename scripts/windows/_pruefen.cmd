@@ -15,6 +15,11 @@ if errorlevel 1 (
     echo [FEHLER] pnpm konnte nicht installiert werden.
     exit /b 1
   )
+  rem Neu installiertes pnpm liegt in %APPDATA%\npm, das ist in diesem Fenster evtl. noch nicht im PATH
+  set "PATH=%APPDATA%\npm;%PATH%"
+)
+where pnpm >nul 2>&1
+if errorlevel 1 (
   echo pnpm ist installiert. Bitte dieses Fenster schliessen und die Datei erneut starten.
   exit /b 1
 )
