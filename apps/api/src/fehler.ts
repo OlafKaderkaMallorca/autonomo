@@ -5,6 +5,8 @@ export class HttpFehler extends Error {
     public statusCode: number,
     message: string,
     public details?: unknown,
+    /** Maschinenlesbarer Code, damit App und Portal die Meldung übersetzen können. */
+    public code?: string,
   ) {
     super(message);
   }

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { betriebAnlegenSchema, istGueltigeSpanischeSteuernummer } from "@autonomo/shared";
+import { z } from "zod";
 import type { Deps } from "../app.js";
 import { sendeAnmeldelink } from "../auth/anmeldelink.js";
 import { benutzerFuerEmail, protokolliere } from "../benutzer.js";
@@ -41,5 +42,16 @@ export async function adminRoutes(app: FastifyInstance, { sql, config, mail, aut
       }),
     );
     return reply.code(201).send(ergebnis);
+  });
+
+  /** Betrieb sperren/entsperren (z. B. Abo abgelaufen). Gesperrte Betriebe können sich nicht mehr anmelden. */
+  app.patch("/admin/betriebe/:id", { preHandler: auth.nurPlattformAdmin }, async (req) => {
+    const { id } = req.params as { id: string };
+    const { gesperrt } = validiere(z.object({ gesperrt: z.boolean() }), req.body);
+    const [b] = await mitKontext(sql, { benutzerId: req.benutzer!.id }, (tx) =>
+      tx`update betrieb set gesperrt = ${gesperrt} where id = ${id} returning id, name, gesperrt`,
+    );
+    if (!b) throw new HttpFehler(404, "Betrieb nicht gefunden");
+    return b;
   });
 }

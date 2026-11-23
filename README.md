@@ -58,7 +58,11 @@ pnpm dev           # startet API und Web-Portal
 
 Dann http://localhost:3002 öffnen und mit **olaf@demo.local** / **demo-passwort** anmelden.
 
-Anmeldelinks per E-Mail werden lokal nicht verschickt. Sie erscheinen im Terminal, in dem `pnpm dev` läuft.
+Nach einem Update mit neuen Demo-Daten (z. B. Phase 1: Aufträge, Stunden des Vormonats) einfach `einrichten.cmd` bzw. `pnpm run einrichten` noch einmal ausführen. Vorhandene Daten bleiben erhalten.
+
+E-Mails (Anmeldelinks, Angebote, Rechnungen) werden lokal nicht wirklich verschickt. Sie landen im Test-Postfach **Mailpit**: http://localhost:8026 (startet zusammen mit der Datenbank). Ohne Docker bleibt `SMTP_URL` in `apps/api/.env` leer, dann erscheinen die Mails im Terminal, in dem `pnpm dev` läuft.
+
+PDFs für Angebote und Rechnungen erzeugt die API mit dem vorhandenen Browser: unter Windows automatisch mit Microsoft Edge. Wird keiner gefunden, in `apps/api/.env` bei `PDF_BROWSER` den Pfad zu Chrome oder Edge eintragen. Fotos, PDFs und Logos liegen lokal im Ordner `apps/api/daten/`.
 
 ### Handy-App
 

@@ -6,27 +6,60 @@ import type { Config } from "./config.js";
 import type { Sql } from "./db.js";
 import { HttpFehler } from "./fehler.js";
 import type { MailVersand } from "./mail.js";
+import { BILD_TYPEN } from "./bilder.js";
+import type { PdfDrucker } from "./pdf/browser.js";
+import type { Speicher } from "./speicher.js";
+import { fotoRoutes } from "./routes/fotos.js";
+import { oeffentlichRoutes } from "./routes/oeffentlich.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
 import { betriebRoutes } from "./routes/betriebe.js";
 import { kundenRoutes } from "./routes/kunden.js";
+import { angeboteRoutes } from "./routes/angebote.js";
+import { aufgabenRoutes } from "./routes/aufgaben.js";
+import { auftraegeRoutes } from "./routes/auftraege.js";
+import { einstellungenRoutes } from "./routes/einstellungen.js";
+import { rechnungenRoutes } from "./routes/rechnungen.js";
+import { uebersichtRoutes } from "./routes/uebersicht.js";
+import { zeitRoutes } from "./routes/zeit.js";
 
 export interface Deps {
   sql: Sql;
   config: Config;
   mail: MailVersand;
   auth: Auth;
+  speicher: Speicher;
+  pdf: PdfDrucker;
 }
 
-export async function baueApp(opts: { sql: Sql; config: Config; mail: MailVersand; logger?: boolean }): Promise<FastifyInstance> {
+export interface AppOptionen {
+  sql: Sql;
+  config: Config;
+  mail: MailVersand;
+  speicher: Speicher;
+  pdf: PdfDrucker;
+  logger?: boolean;
+}
+
+export async function baueApp(opts: AppOptionen): Promise<FastifyInstance> {
   const app = Fastify({ logger: opts.logger ?? false, trustProxy: true, bodyLimit: 1024 * 1024 });
   await app.register(cookie);
   await app.register(rateLimit, { global: false });
+  // Fotos und Logos werden als rohe Bilddaten hochgeladen (einfach für die Handy-App)
+  app.addContentTypeParser(BILD_TYPEN, { parseAs: "buffer", bodyLimit: 25 * 1024 * 1024 }, (_req, body, done) => done(null, body));
 
   app.setErrorHandler((err, req, reply) => {
     if (err instanceof HttpFehler) {
-      return reply.code(err.statusCode).send({ fehler: err.message, details: err.details });
+      return reply.code(err.statusCode).send({ fehler: err.message, code: err.code, details: err.details });
     }
+    // Von Datenbank-Triggern ausgelöste Schutzregeln (z. B. ausgestellte Rechnung ändern)
+    const pgCode = (err as { code?: string }).code;
+    if (pgCode === "P0001") {
+      return reply.code(409).send({ fehler: (err as Error).message, code: "gesperrt" });
+    }
+    if (pgCode === "22P02") return reply.code(404).send({ fehler: "Nicht gefunden", code: "nicht_gefunden" });
+    if (pgCode === "23503") return reply.code(400).send({ fehler: "Verweis auf einen nicht vorhandenen Datensatz", code: "verweis_ungueltig" });
+    if (pgCode === "23505") return reply.code(409).send({ fehler: "Eintrag existiert bereits", code: "doppelt" });
     const status = (err as { statusCode?: number }).statusCode;
     if (status && status < 500) return reply.code(status).send({ fehler: (err as Error).message });
     req.log.error(err);
@@ -34,6 +67,7 @@ export async function baueApp(opts: { sql: Sql; config: Config; mail: MailVersan
   });
 
   const deps: Deps = { ...opts, auth: erstelleAuth(opts.sql) };
+  app.addHook("onClose", async () => opts.pdf.schliessen());
 
   app.get("/health", async () => {
     await opts.sql`select 1`;
@@ -43,6 +77,19 @@ export async function baueApp(opts: { sql: Sql; config: Config; mail: MailVersan
   await app.register(async (a) => authRoutes(a, deps));
   await app.register(async (a) => adminRoutes(a, deps));
   await app.register(async (a) => betriebRoutes(a, deps));
-  await app.register(async (a) => kundenRoutes(a, deps));
+  for (const routes of [
+    kundenRoutes,
+    einstellungenRoutes,
+    angeboteRoutes,
+    auftraegeRoutes,
+    aufgabenRoutes,
+    zeitRoutes,
+    rechnungenRoutes,
+    uebersichtRoutes,
+    fotoRoutes,
+    oeffentlichRoutes,
+  ]) {
+    await app.register(async (a) => routes(a, deps));
+  }
   return app;
 }

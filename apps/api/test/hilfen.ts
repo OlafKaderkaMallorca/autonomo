@@ -6,6 +6,8 @@ import { verbindeDb, type Sql } from "../src/db.js";
 import { hashePasswort } from "../src/auth/passwort.js";
 import type { Mail } from "../src/mail.js";
 import { migriere } from "../src/migrate.js";
+import { erstellePdfDrucker } from "../src/pdf/browser.js";
+import { speicherImRam } from "../src/speicher.js";
 
 /**
  * Erwartet eine Postgres-Instanz mit den Rollen autonomo_owner (createdb) und autonomo_app.
@@ -18,6 +20,7 @@ export interface TestUmgebung {
   app: FastifyInstance;
   sql: Sql;
   mails: Mail[];
+  speicher: ReturnType<typeof speicherImRam>;
   ownerSql: postgres.Sql;
   schliessen(): Promise<void>;
 }
@@ -35,12 +38,20 @@ export async function testUmgebung(): Promise<TestUmgebung> {
   const config = ladeConfig({ NODE_ENV: "test", DATABASE_URL: `${APP_URL_BASIS}/${dbName}`, WEB_URL: "https://portal.test" });
   const sql = verbindeDb(config.DATABASE_URL);
   const mails: Mail[] = [];
-  const app = await baueApp({ sql, config, mail: { sende: async (m) => void mails.push(m) } });
+  const speicher = speicherImRam();
+  const app = await baueApp({
+    sql,
+    config,
+    mail: { sende: async (m) => void mails.push(m) },
+    speicher,
+    pdf: erstellePdfDrucker(process.env.PDF_BROWSER),
+  });
 
   return {
     app,
     sql,
     mails,
+    speicher,
     ownerSql,
     async schliessen() {
       await app.close();
