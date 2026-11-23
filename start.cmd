@@ -13,6 +13,8 @@ if not exist node_modules (
   echo Noch nicht eingerichtet. Bitte zuerst einrichten.cmd ausfuehren.
   goto fehler
 )
+rem Reste eines frueheren Starts (z. B. Fenster geschlossen statt Strg+C) beenden
+call scripts\windows\_beenden.cmd
 call scripts\windows\_ports.cmd || goto fehler
 call scripts\windows\_datenbank.cmd || goto fehler
 
