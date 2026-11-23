@@ -1,10 +1,10 @@
 # Autónomo-App – Projektplan
 
-Stand: 23.11.2026 · Status: **Entwurf, wartet auf Freigabe durch Olaf**
+Stand: 23.11.2026 (ergänzt: mehrere Handwerker) · Status: **Entwurf, wartet auf Freigabe durch Olaf**
 
 ## 1. Ziel
 
-Eine eigene App für Olaf (Autónomo, steuerlich gemeldet auf Mallorca) für den kompletten Ablauf vom Angebot bis zur Rechnung, mit Kundenportal und später einem Zugang für die Steuerberaterin.
+Eine App für Olaf (Autónomo, steuerlich gemeldet auf Mallorca) für den kompletten Ablauf vom Angebot bis zur Rechnung, mit Kundenportal und später einem Zugang für die Steuerberaterin. **Von Anfang an so gebaut, dass weitere spanische Handwerker (z. B. Olafs Kumpel) die App mit eigener, getrennter Firma nutzen können** (siehe Abschnitt 3a).
 
 **Ausgangslage**
 - Olaf arbeitet allein und hat 5–6 Kunden pro Monat, meist Stammkunden. Er hat Privat- und Firmenkunden.
@@ -63,7 +63,8 @@ Auf dem Hetzner-Server läuft alles per `docker compose`: `api`, `web`, `postgre
 
 | Rolle | Darf |
 |---|---|
-| **Olaf (Admin)** | alles |
+| **Plattform-Admin (Olaf)** | Betriebe anlegen/sperren, technische Verwaltung, keine Einsicht in fremde Geschäftsdaten |
+| **Inhaber (Olaf, Kumpel, …)** | alles im eigenen Betrieb |
 | **Kunde** | nur eigene Daten: Angebote ansehen und unterschreiben, Aufträge, Aufgaben (ansehen, neu melden, kommentieren), Fotos, Stunden, Rechnungen als PDF |
 | **Steuerberaterin** | nur lesen: Rechnungen, Gutschriften, Belege, Exporte; Belege kommentieren und markieren |
 
@@ -71,13 +72,41 @@ Auf dem Hetzner-Server läuft alles per `docker compose`: `api`, `web`, `postgre
 - **Olaf:** Passwort plus Face ID / Fingerabdruck in der App.
 - Olaf lädt Kunden per Einladungslink ins Portal ein.
 
+## 3a. Mehrere Handwerker (Mandanten)
+
+Jeder Handwerker ist ein eigener **Mandant** (Betrieb) mit komplett getrennten Daten. Olaf sieht nichts vom Kumpel und umgekehrt.
+
+**Pro Betrieb getrennt:**
+- Firmendaten: Name, NIF, Adresse, IBAN, Logo, Standard-IVA, IRPF-Einstellung
+- Kunden, Angebote, Aufträge, Aufgaben, Fotos, Stunden, Belege
+- **Eigene Rechnungsserien und Nummernkreise** (lückenlos pro Betrieb)
+- **Eigene VeriFactu-Anbindung** (eigener NIF bzw. eigenes Zertifikat beim VeriFactu-Dienst, eigene Hash-Kette)
+- Eigene Rechnungs- und Angebotsvorlage (Logo, Farben, Fußtext)
+- Eigene Steuerberaterin (oder dieselbe, mit getrenntem Zugang pro Betrieb)
+
+**Technisch:**
+- Jede Tabelle bekommt eine `betrieb_id`. Zusätzlich sorgt **Row-Level-Security in PostgreSQL** dafür, dass die Datenbank selbst keine fremden Daten herausgibt, selbst wenn im Code ein Fehler steckt.
+- Dateien liegen pro Betrieb in getrennten Ordnern im Speicher.
+- Ein Login kann zu mehreren Betrieben gehören, z. B. ein Kunde, der sowohl Olaf als auch den Kumpel beauftragt, oder eine Steuerberaterin für beide. Nach dem Login wählt man den Betrieb.
+- Portal-Adresse gemeinsam (z. B. `portal.<domain>`), auf Wunsch später pro Betrieb eine eigene Subdomain.
+- Neue Betriebe legt zunächst Olaf als **Plattform-Admin** an (Einladungslink). Eine Selbst-Registrierung mit Abo ist erst nötig, wenn es ein echtes Produkt werden soll.
+
+**Was das rechtlich bedeutet:**
+- **VeriFactu:** Sobald andere die Software nutzen, ist Olaf (bzw. seine Firma) **Hersteller eines Rechnungsprogramms** und muss die *declaración responsable* abgeben. Er haftet dafür, dass die Software die Vorgaben erfüllt (bei Verstößen drohen hohe Bußgelder gegen den Hersteller). Der externe VeriFactu-Dienst nimmt einen großen Teil davon ab, aber nicht alles. **Vor dem Start mit anderen Nutzern unbedingt mit der Steuerberaterin bzw. einem Anwalt klären.**
+- **Datenschutz:** Olaf wird **Auftragsverarbeiter** für die Kundendaten der anderen Handwerker. Mit jedem Betrieb braucht es einen kurzen Auftragsverarbeitungsvertrag (*contrato de encargado del tratamiento*), dazu AGB/Nutzungsbedingungen.
+- **Geld:** Wenn die anderen dafür zahlen sollen, ist das eine eigene Tätigkeit (Software-Abo) mit eigener Rechnung und IVA. Kostenlos für ein paar Freunde ist einfacher, die rechtlichen Pflichten oben bleiben aber.
+
+**Aufwand:** Wenn Mehrmandantenfähigkeit **von Anfang an** eingebaut wird, kostet das ca. **1–2 Wochen zusätzlich** (vor allem Rechte, Datentrennung, Tests). Nachträglich umzubauen wäre deutlich teurer, deshalb ist es ab Phase 0 eingeplant.
+
 ## 4. Datenmodell (vereinfacht)
 
 ```
-Unternehmen     Olafs Stammdaten: Name, NIF, Adresse, IBAN, Logo, Standard-IVA, Rechnungsserien
+Betrieb         (Mandant) Stammdaten je Handwerker: Name, NIF, Adresse, IBAN, Logo, Standard-IVA,
+                Rechnungsserien, VeriFactu-Zugang. Alle folgenden Tabellen hängen an einem Betrieb.
 Kunde           Typ (privat/firma), Name, NIF/NIE/CIF, Adresse, Sprache, E-Mail, IRPF ja/nein, Notizen
 Kontakt         Personen beim Kunden (für Portal-Login)
-Benutzer        Login, Rolle (admin/kunde/steuerberater), Verknüpfung zu Kunde
+Benutzer        Login (E-Mail, Passwort/Magic Link)
+Mitgliedschaft  Benutzer ↔ Betrieb mit Rolle (inhaber/kunde/steuerberater), bei Kunde Verknüpfung zu Kunde
 Angebot         Nummer, Kunde, Positionen, Gültig bis, Status (Entwurf/gesendet/angenommen/abgelehnt),
                 PDF, Unterschrift (Bild, Name, Zeit, IP, PDF-Hash)
 Auftrag         Kunde, aus Angebot, Titel, Status, Zeitraum
@@ -143,6 +172,8 @@ Rechnungen speichern die Kundendaten zum Zeitpunkt der Ausstellung. Ändert sich
 | Expo EAS (App-Builds) | 0 € im Gratis-Tarif, reicht für den Anfang |
 | **Summe** | **ca. 20–40 €/Monat** plus ca. 100 €/Jahr |
 
+**Mit mehreren Handwerkern:** Der Server reicht für bis zu ca. 20–50 Betriebe unverändert, danach ein größerer Server (ca. 15–30 €/Monat). Der VeriFactu-Dienst rechnet meist **pro NIF** ab, also ca. 5–20 € pro Betrieb und Monat. Das sollte jeder Betrieb selbst tragen. Sobald andere die App nutzen, ist eine **öffentliche Veröffentlichung im App Store / Play Store** sinnvoller als private Verteilung (TestFlight-Builds laufen nach 90 Tagen ab). Die Store-Konten sind dieselben, es kommt nur die Store-Prüfung hinzu. Einmalig ggf. Kosten für Anwalt (AGB, Datenschutz, VeriFactu-Herstellererklärung).
+
 Da nur Olaf die App benutzt, muss sie nicht öffentlich im App Store stehen. Auf dem iPhone reicht eine private Verteilung über TestFlight bzw. Ad-hoc, auf Android eine APK oder ein interner Test-Track. Kunden und Steuerberaterin nutzen das Web-Portal.
 
 ## 8. Phasen
@@ -151,6 +182,8 @@ Da nur Olaf die App benutzt, muss sie nicht öffentlich im App Store stehen. Auf
 - Monorepo: `apps/mobile` (Expo), `apps/web` (Next.js), `apps/api`, `packages/shared` (Typen, Übersetzungen)
 - Docker-Compose-Setup, Hetzner-Server, Domain, HTTPS, Backups
 - Login und Rollen, Übersetzungen DE/ES/EN
+- **Mehrmandantenfähigkeit**: Betriebe, Mitgliedschaften, Datentrennung per Row-Level-Security
+- Grundgerüst damit ca. 2 Wochen statt 1
 
 ### Phase 1 – Kern für Olaf (MVP, ca. 4–6 Wochen)
 - Kunden (privat/firma, Sprache, IRPF-Schalter)
@@ -188,7 +221,8 @@ Da nur Olaf die App benutzt, muss sie nicht öffentlich im App Store stehen. Auf
 - Import von Kunden und Rechnungshistorie aus Zoho Books bzw. Odoo (CSV-Export). Neue Rechnungen laufen in einer eigenen neuen Serie weiter.
 - Zahlungserinnerungen, Abgleich mit Kontoauszug, Bizum/SEPA-Infos auf der Rechnung
 - Kilometer bzw. Fahrten erfassen
-- Mitarbeiter (falls Olaf irgendwann nicht mehr allein arbeitet)
+- Mitarbeiter (falls Olaf irgendwann nicht mehr allein arbeitet), als zusätzliche Rolle im Betrieb
+- Selbst-Registrierung neuer Betriebe mit Abo und Bezahlung (nur wenn daraus ein Produkt werden soll)
 
 Die Zeitangaben sind grobe Schätzungen für die Entwicklung mit Claude, ohne Testphasen mit echten Kunden.
 
@@ -199,5 +233,8 @@ Die Zeitangaben sind grobe Schätzungen für die Entwicklung mit Claude, ohne Te
 3. **Rechnungsserie:** Neue Serie starten, z. B. `2027-0001`, oder an Zoho/Odoo anschließen?
 4. **Technik-Empfehlung freigeben:** React Native/Expo plus Next.js plus Node/Postgres auf Hetzner. Die Alternative wäre Flutter, die Empfehlung bleibt aber TypeScript, weil App, Portal und Server dann dieselbe Sprache sprechen.
 5. **VeriFactu über einen externen API-Dienst** statt Eigenbau: einverstanden?
+
+6. **Mehrere Handwerker:** Nur ein paar Bekannte (kostenlos, Olaf legt die Betriebe an) oder später ein echtes Produkt mit Abo? Für den Anfang reicht Ersteres, die Technik ist für beides vorbereitet.
+7. **Rechtliches vor dem Start mit anderen Nutzern klären:** VeriFactu-Herstellererklärung, Auftragsverarbeitungsvertrag, AGB.
 
 Nach der Freigabe startet Phase 0.
