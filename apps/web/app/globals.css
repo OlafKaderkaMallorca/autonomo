@@ -1,0 +1,58 @@
+:root {
+  --bg: #f5f7f6;
+  --fg: #1f2937;
+  --muted: #5b6472;
+  --card: #ffffff;
+  --border: #e1e5ea;
+  --accent: #059669;
+  --accent-fg: #ffffff;
+  --error: #b42318;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --fg: #f3f4f6;
+    --muted: #9ca3af;
+    --card: #1f2937;
+    --border: #374151;
+    --accent: #34d399;
+    --accent-fg: #111827;
+    --error: #f97066;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+main { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+h1 { font-size: 1.5rem; margin: 0 0 16px; }
+h2 { font-size: 1.1rem; margin: 24px 0 8px; }
+.karte { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+label { display: block; font-size: 0.9rem; color: var(--muted); margin: 12px 0 4px; }
+input, select {
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--fg); font-size: 1rem;
+}
+button {
+  margin-top: 16px; padding: 10px 16px; border: 0; border-radius: 8px;
+  background: var(--accent); color: var(--accent-fg); font-size: 1rem; cursor: pointer;
+}
+button.leise { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+a { color: var(--accent); }
+.fehler { color: var(--error); }
+.hinweis { color: var(--muted); }
+.kopf { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.liste { list-style: none; padding: 0; margin: 0; }
+.liste li { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.liste li:last-child { border-bottom: 0; }
+.trenner { text-align: center; color: var(--muted); margin: 16px 0; }
+
+.marke { display: block; height: 36px; width: auto; margin: 0 0 20px; }
+.marke-dunkel { display: none; }
+@media (prefers-color-scheme: dark) {
+  .marke-hell { display: none; }
+  .marke-dunkel { display: block; }
+}
