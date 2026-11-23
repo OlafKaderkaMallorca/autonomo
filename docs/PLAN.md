@@ -222,7 +222,11 @@ Da nur Olaf die App benutzt, muss sie nicht öffentlich im App Store stehen. Auf
 - Zahlungserinnerungen, Abgleich mit Kontoauszug, Bizum/SEPA-Infos auf der Rechnung
 - Kilometer bzw. Fahrten erfassen
 - Mitarbeiter (falls Olaf irgendwann nicht mehr allein arbeitet), als zusätzliche Rolle im Betrieb
-- Selbst-Registrierung neuer Betriebe mit Abo und Bezahlung (nur wenn daraus ein Produkt werden soll)
+### Phase 6 – Abo-Produkt (wenn Olaf und Kumpel zufrieden sind, ca. 2–3 Wochen)
+- Selbst-Registrierung mit 30 Tagen Testphase, Abo-Verwaltung über Stripe (siehe Abschnitt 10)
+- Landingpage (ES/DE/EN), AGB, Datenschutz, Auftragsverarbeitungsvertrag zum Anklicken
+- Onboarding-Assistent (Firmendaten, Logo, erste Rechnungsserie, VeriFactu aktivieren)
+- Plattform-Admin: Betriebe, Abos, Testphasen, Support-Übersicht
 
 Die Zeitangaben sind grobe Schätzungen für die Entwicklung mit Claude, ohne Testphasen mit echten Kunden.
 
@@ -234,7 +238,60 @@ Die Zeitangaben sind grobe Schätzungen für die Entwicklung mit Claude, ohne Te
 4. **Technik-Empfehlung freigeben:** React Native/Expo plus Next.js plus Node/Postgres auf Hetzner. Die Alternative wäre Flutter, die Empfehlung bleibt aber TypeScript, weil App, Portal und Server dann dieselbe Sprache sprechen.
 5. **VeriFactu über einen externen API-Dienst** statt Eigenbau: einverstanden?
 
-6. **Mehrere Handwerker:** Nur ein paar Bekannte (kostenlos, Olaf legt die Betriebe an) oder später ein echtes Produkt mit Abo? Für den Anfang reicht Ersteres, die Technik ist für beides vorbereitet.
+6. **Mehrere Handwerker:** Entschieden: erst Olaf und Kumpel, später Abo-Produkt (30 Tage gratis, ab ca. 9,99 €/Monat). Preisstufen siehe Abschnitt 10, bitte auswählen bzw. anpassen.
 7. **Rechtliches vor dem Start mit anderen Nutzern klären:** VeriFactu-Herstellererklärung, Auftragsverarbeitungsvertrag, AGB.
 
 Nach der Freigabe startet Phase 0.
+
+## 10. Abo-Modell (Vorschlag)
+
+Ziel laut Olaf: 30 Tage kostenlos testen, danach ca. 9,99 €/Monat.
+
+### Preisstufen
+
+| | **Basis** | **Pro** | **Team** |
+|---|---|---|---|
+| Preis (zzgl. IVA) | **9,99 €/Monat** | **19,99 €/Monat** | **29,99 €/Monat** + 5 € je weiterem Mitarbeiter |
+| Jährlich (2 Monate gratis) | 99 €/Jahr | 199 €/Jahr | 299 €/Jahr |
+| Kunden, Aufträge, Aufgaben, Stunden | ✓ | ✓ | ✓ |
+| Fotos zu Aufgaben | ✓ (5 GB) | ✓ (25 GB) | ✓ (50 GB) |
+| Angebote mit Unterschrift, Rechnungen, VeriFactu | ✓ | ✓ | ✓ |
+| Kundenportal | ✓ | ✓ | ✓ |
+| Belege scannen mit Texterkennung | – | ✓ | ✓ |
+| Zugang Steuerberater + Exporte (303/130/390/347) | – | ✓ | ✓ |
+| Zahlungserinnerungen, Auswertungen | – | ✓ | ✓ |
+| Mitarbeiter mit eigener Zeiterfassung | – | – | ✓ |
+
+Die günstige Basis lockt Kunden an. Pro ist das, was die meisten Handwerker eigentlich wollen: Belege plus Steuerberater-Zugang sparen die monatliche Zettelwirtschaft. Team ist für Betriebe mit Angestellten.
+
+**Alternative, einfacher:** nur **ein Tarif für 14,99 €/Monat** mit allem drin, plus Team-Aufpreis. Weniger Verwaltung, leichter zu erklären. Für den Start mit wenigen Nutzern durchaus sinnvoll.
+
+### Testphase
+- 30 Tage mit vollem Funktionsumfang (Pro), **ohne Kreditkarte**.
+- Erinnerung per E-Mail an Tag 23 und Tag 28.
+- Nach Ablauf ohne Abo: **Nur-Lese-Modus**. Bestehende Rechnungen und Daten bleiben sichtbar und lassen sich exportieren (Aufbewahrungspflicht), neue Rechnungen gehen erst mit Abo.
+- VeriFactu-Meldungen laufen auch in der Testphase, weil echte Rechnungen gemeldet werden müssen.
+
+### Rechnet sich das?
+
+Pro zahlendem Betrieb und Monat bei 9,99 € (Basis):
+
+| Posten | ca. |
+|---|---|
+| Einnahme (netto) | 9,99 € |
+| Stripe-Gebühr (EU-Karte/SEPA) | –0,40 € |
+| VeriFactu-Dienst pro NIF | **–2 bis –10 €** (stark abhängig vom Anbieter und Mengenrabatt) |
+| Server/Speicher anteilig | –0,30 € |
+| **Bleibt** | **ca. 0 bis 7 €** |
+
+**Der VeriFactu-Dienst ist der größte Kostenblock.** Bei 9,99 € muss ein Anbieter mit Mengenpreis (Großkunden- bzw. Partner-Tarif pro NIF) gefunden werden. Ab einigen Dutzend zahlenden Betrieben kann es sich lohnen, die AEAT-Anbindung selbst zu bauen und zertifizieren zu lassen. Deshalb sollte Basis eher bei **12,99 €** liegen oder Pro der Standardtarif sein. Zum Vergleich: Etablierte spanische Programme für Autónomos wie Holded, Quipu oder Contasimple kosten grob 10–30 €/Monat (aktuelle Preise vor dem Start prüfen).
+
+### Bezahlung
+- **Stripe Billing**: Karte, SEPA-Lastschrift, Bizum über Stripe ggf. später. Stripe übernimmt Abo, Testphase, Kündigung und Rechnungsversand.
+- **Abo-Abschluss nur auf der Website, nicht in der App.** Dann fallen keine Apple- bzw. Google-Gebühren von 15–30 % an. Die App zeigt nur „Abo verwalten auf der Website“. Die Store-Regeln dafür vor Veröffentlichung prüfen.
+- Die Abo-Rechnungen an die Handwerker stellt Olaf selbst aus, mit IVA. Das ist eine eigene Tätigkeit (Software-Vertrieb), die bei Hacienda angemeldet werden muss (*alta* im passenden IAE-Epigraf). Mit der Steuerberaterin klären.
+
+### Zielgruppe und Vertrieb
+- Spanische Handwerker und Dienstleister (Garten, Pool, Hausmeister/*mantenimiento*, Reinigung, Elektro, Sanitär), zuerst auf den Balearen.
+- Stärke gegenüber großen Buchhaltungsprogrammen: **für unterwegs gebaut** (Fotos, Stunden, offline), Kundenportal mit Unterschrift, dreisprachig. Das ist interessant für ausländische Handwerker auf Mallorca und ihre internationalen Kunden.
+- Empfehlungsprogramm: ein Freimonat für beide, wenn ein Handwerker einen anderen wirbt.
