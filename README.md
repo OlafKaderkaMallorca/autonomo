@@ -14,6 +14,20 @@ App für selbstständige Handwerker in Spanien (Autónomos): Kunden, Aufträge, 
 
 ## Lokal starten
 
+### Unter Windows per Doppelklick
+
+| Datei | Wofür |
+|---|---|
+| `einrichten.cmd` | Einmalig: Pakete installieren, Datenbank starten, Demo-Daten anlegen |
+| `start.cmd` | Datenbank, API und Web-Portal starten, Browser öffnet sich auf http://localhost:3002 |
+| `stop.cmd` | Datenbank stoppen (Daten bleiben erhalten) |
+| `handy.cmd` | Handy-App über Expo Go starten (start.cmd muss laufen) |
+| `tests.cmd` | Typprüfung und Tests |
+
+Voraussetzungen: Node.js 22 und Docker Desktop. Die Skripte starten Docker Desktop bei Bedarf selbst.
+
+### Von Hand
+
 Ports: **Web-Portal 3002**, **API 4002**, **Datenbank 5434**. So kommt nichts mit anderen Projekten in die Quere.
 
 ### Einmalig
