@@ -203,7 +203,7 @@ Da nur Olaf die App benutzt, muss sie nicht öffentlich im App Store stehen. Auf
 - Benachrichtigung an Olaf bei neuer Aufgabe oder angenommenem Angebot (Push und E-Mail)
 
 ### Phase 3 – VeriFactu (vor Juli 2027, ca. 1–2 Wochen)
-- Anbindung des VeriFactu-API-Dienstes, QR-Code auf der Rechnung, Statusanzeige
+- Anbindung von 1–2 VeriFactu-API-Diensten über einen Adapter, API-Schlüssel pro Betrieb (jeder Handwerker zahlt selbst), QR-Code auf der Rechnung, Statusanzeige
 - Testbetrieb im freiwilligen Zeitraum
 
 ### Phase 4 – Belege (ca. 2 Wochen)
@@ -225,7 +225,7 @@ Da nur Olaf die App benutzt, muss sie nicht öffentlich im App Store stehen. Auf
 ### Phase 6 – Abo-Produkt (wenn Olaf und Kumpel zufrieden sind, ca. 2–3 Wochen)
 - Selbst-Registrierung mit 30 Tagen Testphase, Abo-Verwaltung über Stripe (siehe Abschnitt 10)
 - Landingpage (ES/DE/EN), AGB, Datenschutz, Auftragsverarbeitungsvertrag zum Anklicken
-- Onboarding-Assistent (Firmendaten, Logo, erste Rechnungsserie, VeriFactu aktivieren)
+- Onboarding-Assistent (Firmendaten, Logo, erste Rechnungsserie, eigene VeriFactu-Integration einrichten)
 - Plattform-Admin: Betriebe, Abos, Testphasen, Support-Übersicht
 
 Die Zeitangaben sind grobe Schätzungen für die Entwicklung mit Claude, ohne Testphasen mit echten Kunden.
@@ -280,11 +280,24 @@ Pro zahlendem Betrieb und Monat bei 9,99 € (Basis):
 |---|---|
 | Einnahme (netto) | 9,99 € |
 | Stripe-Gebühr (EU-Karte/SEPA) | –0,40 € |
-| VeriFactu-Dienst pro NIF | **–2 bis –10 €** (stark abhängig vom Anbieter und Mengenrabatt) |
+| VeriFactu-Dienst pro NIF | 0 € (zahlt der Handwerker selbst; sonst –2 bis –10 €) |
 | Server/Speicher anteilig | –0,30 € |
-| **Bleibt** | **ca. 0 bis 7 €** |
+| **Bleibt** | **ca. 9 €** (ohne VeriFactu) |
 
-**Der VeriFactu-Dienst ist der größte Kostenblock.** Bei 9,99 € muss ein Anbieter mit Mengenpreis (Großkunden- bzw. Partner-Tarif pro NIF) gefunden werden. Ab einigen Dutzend zahlenden Betrieben kann es sich lohnen, die AEAT-Anbindung selbst zu bauen und zertifizieren zu lassen. Deshalb sollte Basis eher bei **12,99 €** liegen oder Pro der Standardtarif sein. Zum Vergleich: Etablierte spanische Programme für Autónomos wie Holded, Quipu oder Contasimple kosten grob 10–30 €/Monat (aktuelle Preise vor dem Start prüfen).
+Weil jeder Betrieb VeriFactu selbst bezahlt (siehe unten), bleibt Olaf bei 9,99 € ein Großteil des Preises. Damit sind die vorgeschlagenen Stufen tragfähig. Zum Vergleich: Etablierte spanische Programme für Autónomos wie Holded, Quipu oder Contasimple kosten grob 10–30 €/Monat, oft ohne Kundenportal (aktuelle Preise vor dem Start prüfen).
+
+### VeriFactu-Kosten trägt jeder Betrieb selbst („Bring your own“)
+
+Entschieden (Olaf, 23.11.2026): Jeder Handwerker zahlt VeriFactu direkt selbst, als Integration.
+
+- Jeder Betrieb schließt **selbst einen Vertrag** mit einem unterstützten VeriFactu-Anbieter und trägt in der App unter *Einstellungen → Integrationen → VeriFactu* seinen **API-Schlüssel** ein. Die App prüft die Verbindung und zeigt den Status.
+- Die App bindet zunächst **1–2 Anbieter** über eine einheitliche Schnittstelle (Adapter) an. Weitere lassen sich später ergänzen. Welche Anbieter, wird vor Phase 3 nach Preis, Dokumentation und Partner-Bedingungen ausgewählt.
+- Ohne eingerichtete Integration kann der Betrieb Angebote, Stunden usw. nutzen, aber ab Juli 2027 **keine Rechnungen ausstellen**. Das ist ein klarer Hinweis im Onboarding.
+- **Vorteil:** Die Abo-Preise bleiben schlank (9,99 € funktioniert), Olaf trägt kein Kostenrisiko pro Kunde.
+- **Nachteil:** Ein Schritt mehr für den Handwerker bei der Einrichtung. Deshalb gibt es eine Schritt-für-Schritt-Anleitung im Onboarding, und es lohnt sich, mit einem Anbieter einen Empfehlungs- oder Partnerrabatt für die eigenen Nutzer auszuhandeln.
+- **Langfristige Option:** direkte Meldung an die AEAT mit dem eigenen digitalen Zertifikat des Handwerkers (FNMT-Zertifikat, das Autónomos meist ohnehin haben). Das kostet den Handwerker gar nichts extra, bedeutet aber mehr Entwicklungsaufwand und volle Herstellerverantwortung für die AEAT-Anbindung. Sinnvoll erst bei vielen Nutzern, kann dann als dritte „Integration“ dazukommen.
+
+Wichtig: Auch wenn der VeriFactu-Anbieter vom Handwerker bezahlt wird, bleibt Olaf als Hersteller der Rechnungs-App für die *declaración responsable* verantwortlich (siehe 3a).
 
 ### Bezahlung
 - **Stripe Billing**: Karte, SEPA-Lastschrift, Bizum über Stripe ggf. später. Stripe übernimmt Abo, Testphase, Kündigung und Rechnungsversand.
